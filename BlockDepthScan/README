@@ -1,0 +1,46 @@
+Block Depth Scan
+
+Yesterday, on the way to a meeting, I had an idea for a utility that does some simple source code analysis.
+I suppose that there exists a tool that accomplishes what I want to do but, I thought this an easy little thing to do and, I love to write code so, I'm going to take whack at rolling my own. But enough blathering on...here's the thing...
+
+
+Big Goal:
+   Develop a source code static analysis tool that produces descriptive and 
+   summary statistcs. Measures of code anti-quality and bug location predition
+   models could be developed from the results produced by this tool. 
+
+
+
+strategy / tactics?:
+Develop a static analysis tool that:
+   1. scans multiple source files
+
+   2. proceeds character by charater through each file
+
+   3. for each character, keep track of:
+       a) the current position (line and column)
+
+   4. for each line, keep track of:
+       a) indentation (level and pattern?)
+       b) line length
+
+   5. for each block, keep track of:
+       a) start of block (position)
+       a) end of block (position)
+       a) block nesting depth
+       b) block span
+
+   6. for each file, produce descriptive and summary statistics
+       a) block nesting depth frquency table
+       b) block span frequency table
+       c) line length frequency table
+       d) indentation pattern freq table ? 
+
+
+   7.
+
+   8.
+
+   9.
+
+  10.
