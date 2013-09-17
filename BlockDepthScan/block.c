@@ -1,5 +1,6 @@
 #include "block.h"
 
+// ---------------------------------------------------------------------------
 struct position
 {
     int row;
@@ -13,11 +14,24 @@ struct block
     struct position begin;
     struct position end;
     int depth;
+    struct block* next;
+    struct block* prev;
 };
 
+
+// this is the dummy head node of a doubly linked list.
+struct container 
+{
+    struct block* next;
+    struct block* prev;
+};
+
+
+// ---------------------------------------------------------------------------
 const char* UNKNOWN_FILENAME = "unknown";
 
-struct block* block_allocate(const char* filename, int row, int col, int depth)
+// ---------------------------------------------------------------------------
+struct block* allocate_block(const char* filename, int row, int col, int depth)
 {
     struct block* block;
 
@@ -38,17 +52,17 @@ struct block* block_allocate(const char* filename, int row, int col, int depth)
 }
 
 
-void block_free(struct block* block)
+// ---------------------------------------------------------------------------
+void free_block(struct block* block)
 {
     if (block) {
         free(block);
     }
 }
 
-int block_set_start_pos(struct block* block, int row, int col)
-{
-}
+// ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
 int block_set_end_pos(struct block* block, int row, int col)
 {
 }
