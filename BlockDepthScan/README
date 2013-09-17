@@ -28,7 +28,7 @@ Develop a static analysis tool that:
        a) start of block (position)
        a) end of block (position)
        a) block nesting depth
-       b) block span
+       b) block span (can be calculated)
 
    6. for each file, produce descriptive and summary statistics
        a) block nesting depth frquency table
