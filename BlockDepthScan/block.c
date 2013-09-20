@@ -14,16 +14,6 @@ struct block
     struct position begin;
     struct position end;
     int depth;
-    struct block* next;
-    struct block* prev;
-};
-
-
-// this is the dummy head node of a doubly linked list.
-struct container 
-{
-    struct block* next;
-    struct block* prev;
 };
 
 
@@ -60,10 +50,42 @@ void free_block(struct block* block)
     }
 }
 
-// ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
-int block_set_end_pos(struct block* block, int row, int col)
+void block_set_end_pos(struct block* block, int row, int col)
 {
+    if (block) {
+        block->end.row = row;
+        block->end.col = col;
+    }
 }
 
+// ---------------------------------------------------------------------------
+int is_block_sane(struct block* block)
+{
+    int v = 0;
+    v = (block && block->filename && !block->depth<0 );
+    return v;
+}
+
+// ---------------------------------------------------------------------------
+int block_get_start_row(struct block* block)
+{
+    
+    return row;
+}
+
+// ---------------------------------------------------------------------------
+int block_get_start_col(struct block* block)
+
+// ---------------------------------------------------------------------------
+int block_get_end_row(struct block* block)
+
+// ---------------------------------------------------------------------------
+int block_get_end_col(struct block* block)
+
+// ---------------------------------------------------------------------------
+int block_get_span(struct block* block)
+
+// ---------------------------------------------------------------------------
+int block_get_depth(struct block* block)
