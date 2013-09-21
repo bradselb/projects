@@ -10,7 +10,7 @@ struct list_node
     struct list_node* next;
     struct list_node* prev;
     void* item;
-}
+};
 
 
 // ---------------------------------------------------------------------------
@@ -139,3 +139,23 @@ void* peek_front(struct list_node* head)
     return item;
 }
 
+
+// ---------------------------------------------------------------------------
+int call_fctn_foreach_item(struct list_node* head, void (*fctn)(void* item))
+{
+    int count = 0;
+    struct list_node* node;
+
+    if (head) {
+        node = head->next;
+        while (node != head) {
+            if (fctn) {
+                fctn(node->item);
+            }
+            ++count;
+            node = node->next;
+        }
+    }
+
+    return count;
+}
