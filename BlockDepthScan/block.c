@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "block.h"
@@ -18,25 +19,6 @@ struct block
     struct position end;
     int depth;
 };
-
-
-// ---------------------------------------------------------------------------
-int block_printf(struct block* block)
-{
-    int rc = 0;
-    int nr;
-    int span;
-
-    if (is_sane_block(block)) {
-        nr = 0;
-        span = block->end.row - block->begin.row;
-        printf("file: %s\n", block->filename);
-        printf("begin: (%d, %d)\n", block->begin.row, block->begin.col);
-        printf("end:   (%d, %d)\n", block->end.row, block->end.col);
-        printf("nr: $d, span: %d, depth: %d\n", nr, span, block->depth);
-    }
-    return rc;
-}
 
 // ---------------------------------------------------------------------------
 const char* UNKNOWN_FILENAME = "unknown";
@@ -132,3 +114,21 @@ int block_get_depth(struct block* block)
     return row;
 }
 
+
+// ---------------------------------------------------------------------------
+int block_printf(struct block* block)
+{
+    int rc = 0;
+    int nr;
+    int span;
+
+    if (is_block_sane(block)) {
+        nr = 0;
+        span = block->end.row - block->begin.row;
+        printf("file: %s\n", block->filename);
+        printf("begin: (%d, %d)\n", block->begin.row, block->begin.col);
+        printf("end:   (%d, %d)\n", block->end.row, block->end.col);
+        printf("nr: %d, span: %d, depth: %d\n", nr, span, block->depth);
+    }
+    return rc;
+}

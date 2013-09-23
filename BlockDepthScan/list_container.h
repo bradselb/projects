@@ -9,7 +9,7 @@
 struct list_node;
 
 struct list_node* allocate_list(void);
-void free_list(struct list_node* head);
+void free_list(struct list_node* head, void (*destructor) (void* item));
 
 int is_list_empty(struct list_node* head);
 
@@ -20,6 +20,7 @@ void* pop_front(struct list_node* head);
 //void* pop_back(struct list_node* head);
 
 void* peek_front(struct list_node* head);
+int call_fctn_foreach_item(struct list_node* head, void (*fctn)(void* item));
 
 #endif //!defined LIST_CONTAINER_H
 

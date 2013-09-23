@@ -58,14 +58,21 @@ struct list_node* allocate_list(void)
 
 
 // ---------------------------------------------------------------------------
-void free_list(struct list_node* head)
+// this function frees each node on the list and, if a destructor function
+// is supplied, it will call the destructor on the pointer contained at each
+// node as it is destroyed. Of course, the destructor function need not 
+// be a destructor. It might simply display a message. 
+// This allows one to push items onto several lists and only destroy them once.
+// Obviously, it also requires care.
+void free_list(struct list_node* head, void (*destructor) (void*))
 {
     void* item;
 
     while (!is_list_empty(head)) {
         item = pop_front(head);
+        if (destructor) destructor(item);
     }
-    item = free_node(head);
+    free_node(head);
 }
 
 
@@ -141,6 +148,10 @@ void* peek_front(struct list_node* head)
 
 
 // ---------------------------------------------------------------------------
+// for each item int eh list, call the function (if one is supplied). 
+// returns the number of elements on the list. Note that teven if no
+// function is supplied, the list is always traversed and the count 
+// retuned. 
 int call_fctn_foreach_item(struct list_node* head, void (*fctn)(void* item))
 {
     int count = 0;
@@ -159,3 +170,4 @@ int call_fctn_foreach_item(struct list_node* head, void (*fctn)(void* item))
 
     return count;
 }
+

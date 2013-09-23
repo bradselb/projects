@@ -23,6 +23,7 @@ int block_get_end_col(struct block*);
 int block_get_span(struct block*);
 int block_get_depth(struct block*);
 
+int block_printf(struct block* block);
 
 #endif // !defined BLOCK_H
 
