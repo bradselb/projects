@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <string.h> 
 
-#include "list_container.h"
+#include "list_of_pointers.h"
 
 
 // ---------------------------------------------------------------------------

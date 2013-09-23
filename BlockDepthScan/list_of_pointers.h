@@ -1,5 +1,5 @@
-#if !defined LIST_CONTAINER_H
-#define LIST_CONTAINER_H
+#if !defined LIST_OF_POINTERS_H
+#define LIST_OF_POINTERS_H
 
 // ---------------------------------------------------------------------------
 // doubly linked circular list of pointers.
@@ -22,5 +22,5 @@ void* pop_front(struct list_node* head);
 void* peek_front(struct list_node* head);
 int call_fctn_foreach_item(struct list_node* head, void (*fctn)(void* item));
 
-#endif //!defined LIST_CONTAINER_H
+#endif // !defined LIST_OF_POINTERS_H
 
