@@ -129,6 +129,7 @@ int block_printf(struct block* block)
         printf("begin: (%d, %d)\n", block->begin.row, block->begin.col);
         printf("end:   (%d, %d)\n", block->end.row, block->end.col);
         printf("nr: %d, span: %d, depth: %d\n", nr, span, block->depth);
+        printf("\n");
     }
     return rc;
 }
