@@ -159,6 +159,7 @@ int call_fctn_foreach_item(struct list_node* head, void (*fctn)(void* item))
 
     if (head) {
         node = head->next;
+        printf("head: %p, node: %p\n", head, node);
         while (node != head) {
             if (fctn) {
                 fctn(node->item);

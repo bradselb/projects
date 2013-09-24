@@ -122,7 +122,7 @@ int block_printf(struct block* block)
     int nr;
     int span;
 
-    if (is_block_sane(block)) {
+    if (block) {
         nr = 0;
         span = block->end.row - block->begin.row;
         printf("file: %s\n", block->filename);
