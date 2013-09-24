@@ -125,11 +125,11 @@ int block_printf(struct block* block)
     if (block) {
         nr = 0;
         span = block->end.row - block->begin.row;
-        printf("file: %s\n", block->filename);
-        printf("begin: (%d, %d)\n", block->begin.row, block->begin.col);
-        printf("end:   (%d, %d)\n", block->end.row, block->end.col);
+        //printf("file: %s\n", block->filename);
+        printf("begin: (%d, %d), ", block->begin.row, block->begin.col);
+        printf("end: (%d, %d), ", block->end.row, block->end.col);
         printf("nr: %d, span: %d, depth: %d\n", nr, span, block->depth);
-        printf("\n");
+        //printf("\n");
     }
     return rc;
 }

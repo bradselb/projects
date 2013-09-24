@@ -7,10 +7,16 @@
 #include "block.h"
 
 // 
-void show_block(void* item)
+void show_block(void* item, void* unused)
 {
     struct block* block = (struct block*)item;
     block_printf(block);
+}
+
+void free_block_wrapper(void* item)
+{
+    struct block* block = (struct block*)item;
+    free_block(block);
 }
 
 int main(int argc, char* argv[])
@@ -39,27 +45,28 @@ int main(int argc, char* argv[])
                 if ('\n' == c) {
                     ++line;
                     column = 0;
-                } else if ('{' == c) {
+                } else if (0x7b == c) {
                     // start of a new block
                     ++depth;
                     block = allocate_block(argv[i], line, column, depth);
                     push_front(stack, block);
-                    printf("start, line: %d, col: %d, depth: %d\n", line, column, depth);
-                } else if ('}' == c) {
+                    //printf("start, line: %d, col: %d, depth: %d\n", line, column, depth);
+                } else if (0x7d == c) {
                     block = pop_front(stack);
                     block_set_end_pos(block, line, column);
                     push_back(block_list, block);
-                    printf("  end, line: %d, col: %d, depth: %d\n", line, column, depth);
+                    //printf("  end, line: %d, col: %d, depth: %d\n", line, column, depth);
                     --depth;
                 }
             }
             fclose(file);
 
-            call_fctn_foreach_item(block_list, show_block);
+//int foreach_itemi_call_fctn(struct list_node* head, void (*fctn)(void* item, void* ctx), void* ctx)
+            foreach_item_call_fctn(block_list, show_block, 0);
             fflush(stdout);
 
-            free_list(block_list, free_block);
-            free_list(stack, free_block);
+            free_list(block_list, free_block_wrapper);
+            free_list(stack, free_block_wrapper);
         } else {
             fprintf(stderr, "'%s', %s\n", argv[i], strerror(errno));
         }
