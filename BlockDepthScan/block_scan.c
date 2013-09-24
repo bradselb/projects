@@ -6,19 +6,27 @@
 #include "list_of_pointers.h"
 #include "block.h"
 
-// 
+// -------------------------------------------------------------------------
+// use the ascii code instead of the charater so that when I run this program 
+// on this file, it does not count the characters as blocks. bad smell?
+#define LEFT_CURLY_BRACE 0x7b
+#define RIGHT_CURLY_BRACE 0x7d
+
+// -------------------------------------------------------------------------
 void show_block(void* item, void* unused)
 {
     struct block* block = (struct block*)item;
     block_printf(block);
 }
 
+// -------------------------------------------------------------------------
 void free_block_wrapper(void* item)
 {
     struct block* block = (struct block*)item;
     free_block(block);
 }
 
+// -------------------------------------------------------------------------
 int main(int argc, char* argv[])
 {
     FILE* file;
@@ -45,23 +53,22 @@ int main(int argc, char* argv[])
                 if ('\n' == c) {
                     ++line;
                     column = 0;
-                } else if (0x7b == c) {
+                } else if (LEFT_CURLY_BRACE == c) {
                     // start of a new block
                     ++depth;
                     block = allocate_block(argv[i], line, column, depth);
                     push_front(stack, block);
-                    //printf("start, line: %d, col: %d, depth: %d\n", line, column, depth);
-                } else if (0x7d == c) {
+                } else if (RIGHT_CURLY_BRACE == c) {
+                    // close current block
                     block = pop_front(stack);
                     block_set_end_pos(block, line, column);
                     push_back(block_list, block);
-                    //printf("  end, line: %d, col: %d, depth: %d\n", line, column, depth);
                     --depth;
                 }
             }
             fclose(file);
 
-//int foreach_itemi_call_fctn(struct list_node* head, void (*fctn)(void* item, void* ctx), void* ctx)
+            // show all the blocks in the list
             foreach_item_call_fctn(block_list, show_block, 0);
             fflush(stdout);
 
