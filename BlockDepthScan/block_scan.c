@@ -55,9 +55,9 @@ int main(int argc, char* argv[])
                     column = 0;
                 } else if (LEFT_CURLY_BRACE == c) {
                     // start of a new block
-                    ++depth;
                     block = allocate_block(argv[i], line, column, depth);
                     push_front(stack, block);
+                    ++depth;
                 } else if (RIGHT_CURLY_BRACE == c) {
                     // close current block
                     block = pop_front(stack);
