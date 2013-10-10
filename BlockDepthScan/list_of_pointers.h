@@ -3,26 +3,32 @@
 
 // ---------------------------------------------------------------------------
 // doubly linked circular list of pointers.
-// the container does not make a copy of items pushed onto the list and, in
-// general, the list object does NOT own the pointers.
-// ==> client code owns the items in the list. Cliets are responisble for 
-// managing the lifetime of the items in the list.
+// the container does not make a copy of items pushed onto the list.
+// the list object does NOT own the pointers.
+// client code owns the items in the list.
+// clients are responisble for managing the lifetime of the items in the list.
+// that said however, if the client supplies a destructor function to the 
+// list destructor, then the list destructor will call the supplied 
+// item destructor for each item in the list
 
-struct list_node;
+struct list;
 
-struct list_node* allocate_list(void);
-void free_list(struct list_node* head, void (*destructor) (void* item));
+struct list* create_list(void);
+void destroy_list(struct list* head, void (*destructor) (void* item));
 
-int is_list_empty(struct list_node* head);
+int is_list_empty(struct list* head);
 
-void push_front(struct list_node* head, void* item);
-void push_back(struct list_node* head, void* item);
+void add_item_ascending(struct list* head, void* item, int (*cmp)(const void* item1, const void* item2));
+void add_item_descending(struct list* head, void* item, int (*cmp)(const void* item1, const void* item2));
 
-void* pop_front(struct list_node* head);
-//void* pop_back(struct list_node* head);
+void push_front(struct list* head, void* item);
+void push_back(struct list* head, void* item);
 
-void* peek_front(struct list_node* head);
-int foreach_item_call_fctn(struct list_node* head, void (*fctn)(void* item, void* ctx), void* ctx);
+void* pop_front(struct list* head);
+//void* pop_back(struct list* head);
+
+void* peek_front(struct list* head);
+int foreach_item_call_fctn(struct list* head, void (*fctn)(void* item, void* ctx), void* ctx);
 
 #endif // !defined LIST_OF_POINTERS_H
 

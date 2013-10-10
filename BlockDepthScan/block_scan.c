@@ -35,8 +35,8 @@ int main(int argc, char* argv[])
     int c;
 
     struct block* block;
-    struct list_node* stack = 0;
-    struct list_node* block_list = 0;
+    struct list* stack = 0;
+    struct list* block_list = 0;
     
 
     for (int i=1; i<argc; ++i) {
@@ -45,8 +45,8 @@ int main(int argc, char* argv[])
             line = 1;
             column = 0;
             depth = 0;
-            stack = allocate_list();
-            block_list = allocate_list();
+            stack = create_list();
+            block_list = create_list();
             printf("file: %s\n", argv[i]);
             while (EOF != (c = fgetc(file))) {
                 ++column;
@@ -72,8 +72,8 @@ int main(int argc, char* argv[])
             foreach_item_call_fctn(block_list, show_block, 0);
             fflush(stdout);
 
-            free_list(block_list, free_block_wrapper);
-            free_list(stack, free_block_wrapper);
+            destroy_list(block_list, free_block_wrapper);
+            destroy_list(stack, free_block_wrapper);
         } else {
             fprintf(stderr, "'%s', %s\n", argv[i], strerror(errno));
         }

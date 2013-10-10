@@ -5,18 +5,18 @@
 
 
 // ---------------------------------------------------------------------------
-struct list_node
+struct list
 {
-    struct list_node* next;
-    struct list_node* prev;
+    struct list* next;
+    struct list* prev;
     void* item;
 };
 
 
 // ---------------------------------------------------------------------------
-static struct list_node* create_node(void* item)
+static struct list* create_node(void* item)
 {
-    struct list_node* node;
+    struct list* node;
     node = malloc(sizeof *node);
     if (node) {
         node->next = 0;
@@ -28,7 +28,7 @@ static struct list_node* create_node(void* item)
 
 
 // ---------------------------------------------------------------------------
-static void* free_node(struct list_node* node)
+static void* free_node(struct list* node)
 {
     void *item;
 
@@ -45,9 +45,9 @@ static void* free_node(struct list_node* node)
 
 
 // ---------------------------------------------------------------------------
-struct list_node* allocate_list(void)
+struct list* create_list(void)
 {
-    struct list_node* head;
+    struct list* head;
     head = create_node(0);
     if (head) {
         head->next = head;
@@ -64,7 +64,7 @@ struct list_node* allocate_list(void)
 // be a destructor. It might simply display a message. 
 // This allows one to push items onto several lists and only destroy them once.
 // Obviously, it also requires care.
-void free_list(struct list_node* head, void (*destructor) (void*))
+void destroy_list(struct list* head, void (*destructor) (void*))
 {
     void* item;
 
@@ -77,7 +77,7 @@ void free_list(struct list_node* head, void (*destructor) (void*))
 
 
 // ---------------------------------------------------------------------------
-int is_list_empty(struct list_node* head)
+int is_list_empty(struct list* head)
 {
     int is_empty = 1;
     if (head && head != head->next) {
@@ -87,9 +87,9 @@ int is_list_empty(struct list_node* head)
 }
 
 // ---------------------------------------------------------------------------
-void push_front(struct list_node* head, void* item)
+void push_front(struct list* head, void* item)
 {
-    struct list_node* node;
+    struct list* node;
 
     if (head && item && (node = create_node(item))) {
         node->next = head->next;
@@ -100,9 +100,9 @@ void push_front(struct list_node* head, void* item)
 }
 
 // ---------------------------------------------------------------------------
-void push_back(struct list_node* head, void* item)
+void push_back(struct list* head, void* item)
 {
-    struct list_node* node;
+    struct list* node;
 
     if (head && item && (node = create_node(item))) {
         node->next = head;
@@ -116,10 +116,10 @@ void push_back(struct list_node* head, void* item)
 // ---------------------------------------------------------------------------
 // If there exists at least one item in the list, returns the item in the 
 // first node and frees the node. If the list is empty, returns zero.
-void* pop_front(struct list_node* head)
+void* pop_front(struct list* head)
 {
     void *item;
-    struct list_node* node;
+    struct list* node;
 
     item = 0;
     if (head) {
@@ -135,7 +135,7 @@ void* pop_front(struct list_node* head)
 
 
 // ---------------------------------------------------------------------------
-void* peek_front(struct list_node* head)
+void* peek_front(struct list* head)
 {
     void *item;
 
@@ -152,10 +152,10 @@ void* peek_front(struct list_node* head)
 // returns the number of elements on the list. Note that teven if no
 // function is supplied, the list is always traversed and the count 
 // retuned. 
-int foreach_item_call_fctn(struct list_node* head, void (*fctn)(void* item, void* ctx), void* ctx)
+int foreach_item_call_fctn(struct list* head, void (*fctn)(void* item, void* ctx), void* ctx)
 {
     int count = 0;
-    struct list_node* node;
+    struct list* node;
 
     if (head) {
         node = head->next;
