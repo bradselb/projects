@@ -1,7 +1,8 @@
 Block Depth Scan
 
 Yesterday, on the way to a meeting, I had an idea for a utility that does some simple source code analysis.
-I suppose that there exists a tool that accomplishes what I want to do but, I thought this an easy little thing to do and, I love to write code so, I'm going to take whack at rolling my own. But enough blathering on...here's the thing...
+I suppose that there exists a tool that accomplishes what I want to do but, I thought this an easy little
+thing to do and, I love to write code so, I'm going to take whack at rolling my own.
 
 
 Big Goal:
@@ -11,7 +12,7 @@ Big Goal:
 
 
 
-strategy / tactics?:
+strategy / tactics:
 Develop a static analysis tool that:
    1. scans multiple source files
 

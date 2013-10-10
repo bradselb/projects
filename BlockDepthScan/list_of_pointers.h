@@ -3,8 +3,10 @@
 
 // ---------------------------------------------------------------------------
 // doubly linked circular list of pointers.
-// the container does make a copy of items pushed onto the list and in general
-// does NOT own the pointers -- client code owns the items in the list.  
+// the container does not make a copy of items pushed onto the list and, in
+// general, the list object does NOT own the pointers.
+// ==> client code owns the items in the list. Cliets are responisble for 
+// managing the lifetime of the items in the list.
 
 struct list_node;
 
