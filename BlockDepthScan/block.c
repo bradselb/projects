@@ -56,7 +56,7 @@ void free_block(struct block* block)
 
 
 // ---------------------------------------------------------------------------
-void block_set_end_pos(struct block* block, int row, int col)
+void set_block_end_pos(struct block* block, int row, int col)
 {
     if (block) {
         block->end.row = row;
@@ -73,50 +73,55 @@ int is_block_sane(struct block* block)
 }
 
 // ---------------------------------------------------------------------------
-int block_get_start_row(struct block* block)
+int get_block_start_row(struct block* block)
 {
     int row = 0;
     return row;
 }
 
 // ---------------------------------------------------------------------------
-int block_get_start_col(struct block* block)
+int get_block_start_col(struct block* block)
 {
     int row = 0;
     return row;
 }
 
 // ---------------------------------------------------------------------------
-int block_get_end_row(struct block* block)
+int get_block_end_row(struct block* block)
 {
     int row = 0;
     return row;
 }
 
 // ---------------------------------------------------------------------------
-int block_get_end_col(struct block* block)
+int get_block_end_col(struct block* block)
 {
     int row = 0;
     return row;
 }
 
 // ---------------------------------------------------------------------------
-int block_get_span(struct block* block)
+int get_block_span(struct block* block)
 {
     int row = 0;
     return row;
 }
 
 // ---------------------------------------------------------------------------
-int block_get_depth(struct block* block)
+int get_block_depth(struct block* block)
 {
     int row = 0;
     return row;
 }
 
+int cmp_block_start_line(const struct block* ,const struct block*); 
+int cmp_block_end_line(const struct block* ,const struct block*); 
+int cmp_block_depth(const struct block* ,const struct block*); 
+int cmp_block_span(const struct block* ,const struct block*); 
+
 
 // ---------------------------------------------------------------------------
-int block_printf(struct block* block)
+int print_block(struct block* block)
 {
     int rc = 0;
     int nr;

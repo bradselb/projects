@@ -1,4 +1,4 @@
-EXE = block_scan
+EXE = blockscan
 SOURCES = $(wildcard *.c)
 OBJECTS = $(SOURCES:%.c=%.o)
 

@@ -12,18 +12,23 @@ struct block;
 struct block* allocate_block(const char* filename, int row, int col, int depth);
 void free_block(struct block*);
 
-void block_set_end_pos(struct block*, int row, int col);
+void set_block_end_pos(struct block*, int row, int col);
 
 int is_block_sane(struct block* block);
 
-int block_get_start_row(struct block*);
-int block_get_start_col(struct block*);
-int block_get_end_row(struct block*);
-int block_get_end_col(struct block*);
-int block_get_span(struct block*);
-int block_get_depth(struct block*);
+int get_block_start_row(struct block*);
+int get_block_start_col(struct block*);
+int get_block_end_row(struct block*);
+int get_block_end_col(struct block*);
+int get_block_span(struct block*);
+int get_block_depth(struct block*);
 
-int block_printf(struct block* block);
+int cmp_block_start_line(const struct block* ,const struct block*); 
+int cmp_block_end_line(const struct block* ,const struct block*); 
+int cmp_block_depth(const struct block* ,const struct block*); 
+int cmp_block_span(const struct block* ,const struct block*); 
+
+int print_block(struct block* block);
 
 #endif // !defined BLOCK_H
 

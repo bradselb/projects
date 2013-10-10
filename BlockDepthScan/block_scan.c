@@ -16,7 +16,7 @@
 void show_block(void* item, void* unused)
 {
     struct block* block = (struct block*)item;
-    block_printf(block);
+    print_block(block);
 }
 
 // -------------------------------------------------------------------------
@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
                 } else if (RIGHT_CURLY_BRACE == c) {
                     // close current block
                     block = pop_front(stack);
-                    block_set_end_pos(block, line, column);
+                    set_block_end_pos(block, line, column);
                     push_back(block_list, block);
                     --depth;
                 }
