@@ -86,6 +86,22 @@ int is_list_empty(struct list* head)
     return is_empty;
 }
 
+
+// ---------------------------------------------------------------------------
+// add an item to the list, always keeping the items in the list in ascending
+// order. The cmp function, supplied by the caller, shall return -1, 0 or 1 
+// in case item1 < item2, item1 == item2 or item1 > item2 respecively.
+void add_item_ascending(struct list* head, void* item, int (*cmp)(const void* item1, const void* item2))
+{
+}
+
+
+// ---------------------------------------------------------------------------
+void add_item_descending(struct list* head, void* item, int (*cmp)(const void* item1, const void* item2))
+{
+}
+
+
 // ---------------------------------------------------------------------------
 void push_front(struct list* head, void* item)
 {
