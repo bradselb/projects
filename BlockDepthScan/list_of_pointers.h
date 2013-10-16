@@ -20,6 +20,7 @@ int is_list_empty(struct list* head);
 
 void add_item_ascending(struct list* head, void* item, int (*cmp)(const void* item1, const void* item2));
 void add_item_descending(struct list* head, void* item, int (*cmp)(const void* item1, const void* item2));
+struct list* find_item(struct list* head, void* item, int (*cmp)(const void* , const void*));
 
 void push_front(struct list* head, void* item);
 void push_back(struct list* head, void* item);
