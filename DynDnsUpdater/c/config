@@ -1,0 +1,7 @@
+period 28
+State-Filename /var/tmp/DynDnsUpdaterState.dat
+Detect-URL http://checkip.dyndns.org
+Update-URL http://members.dyndns.org/nic/update
+Hostname test.ath.cx
+Username test
+Password test

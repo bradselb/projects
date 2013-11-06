@@ -1,0 +1,27 @@
+DynDNS updater
+
+Background
+It wasn't too long after we upgraded the internet connection at home 
+from dial-up to DSL, that I wanted to have remote access to some of 
+the computers on the LAN at home. Two things are needed to enable this.
+First port forwarding must be set up on the home router and second, 
+one must know the ip address of the WAN side of the home router. 
+
+Neither of these is difficult but the second, knowing the ip address
+of the WAN side of the router is pretty inconvenient. With DSL, it 
+seems to change everytime you reboot the DSL modem.
+
+It turns out that there are many web services that address this issue. 
+I chose DynDNS because, at the time, there was a free option and prehaps, 
+more importantly, they had documentation exlaining the protocol.  Many home
+routers have a feature that makes working with DynDNS really easy.
+The 2Wire 2701HG-B combination modem / Wi-Fi residential gateway that we
+purchased from our DSL service provider did not. So, began my quest to 
+write my own updater. The scripts and programs in the sub-directories
+here are the results of that effort. The TCL implementation was my first.
+It served mainly as a proof of concept and is thus, pretty bare bones.
+I started work on a more thorough implementation in C++ next and finally,
+when I wanted to run the updater on an embedded Linux development board,
+I re-wrote the whole thing in C.
+
+
