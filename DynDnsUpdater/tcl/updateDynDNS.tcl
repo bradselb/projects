@@ -17,8 +17,6 @@ set UpdateIp(prev_ip) {127.0.0.1}
 
 set DetectIp(host) {checkip.dyndns.org}
 set DetectIp(resource) {/}
-#set DetectIp(host) {automation.whatismyip.com}
-#set DetectIp(resource) {/n09230945.asp}
 set DetectIp(port) {80}
 set DetectIp(myIp) {127.0.0.1}
 set DetectIp(timeout) {10000}  ; # milliseconds
@@ -71,7 +69,7 @@ proc receiveDetectIpReply {chan} {
       close $chan
       # set DetectIp(done) 1
    } else {
-#      puts stdout "$reply" 
+      # puts stdout "$reply" 
       set matches [regexp -nocase -expanded  {([\d]+[\.][\d]+[\.][\d]+[\.][\d]+)}  $reply where addr]
       if { 0 < $matches } { 
          set DetectIp(myIp)  "$addr" 
@@ -99,7 +97,7 @@ proc receiveUpdateIpReply {chan} {
       set UpdateIp(done) 1
    } else {
       lappend UpdateIp(content) $reply
-#      puts stdout "$reply"
+      # puts stdout "$reply"
    }
 }
 
@@ -142,10 +140,8 @@ proc updateDynDNS {username password myHostName} {
       set myIp [detectIp]
       set prevIp "$UpdateIp(prev_ip)"
 
-#      puts stdout ""
       puts stdout "current  ip addr: $myIp"
       puts stdout "previous ip addr: $prevIp"
-#      puts stdout ""
 
       if { $myIp != $prevIp && $myIp != {127.0.0.1} } {
          updateIp $myHostName $myIp $myAuth
