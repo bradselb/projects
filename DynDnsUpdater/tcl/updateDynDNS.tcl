@@ -9,7 +9,8 @@ set UpdateIp(content) [list]
 set UpdateIp(timeout) {10000} ; # milliseconds
 set UpdateIp(done) 0
 
-set UpdateIp(statefile) [file join / var tmp UpdateDynDNS_state.dat]
+#set UpdateIp(statefile) [file join / var tmp UpdateDynDNS_state.dat]
+set UpdateIp(statefile) [file join [pwd] UpdateDynDNS_state.dat]
 set UpdateIp(enable) {false} ; # don't do anything unless good-to-go.
 set UpdateIp(prev_timestamp) [clock seconds] ; # default to now.
 set UpdateIp(prev_result) {none}
