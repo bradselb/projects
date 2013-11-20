@@ -1,0 +1,13 @@
+- Complete the Config object 
+- fix / improve security of Config file? 
+- fix / improve current IP addr discovery
+- improve ip address extraction. 
+- standardize on new & delete instead of create & destroy.
+- be const correct. 
+- create a separate GUI tool to create and manip the Config file
+- move config and state files to proper locations
+- accept command line args
+- make it a proper daemon
+- write to syslog
+- keep a history of the state...or, derive it from log file? 
+- 
