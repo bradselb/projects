@@ -27,6 +27,9 @@ static const char* g_password = "test";
 //hostname("test.dnsalias.com"),
 //hostname("test.homeip.net"),
 
+static const int MAX_STRING_LENGTH = 4095;
+static const int MAX_STRING_BUF_SIZE = MAX_STRING_LENGTH + 1;
+
 
 int initializeConfig(struct Config* config)
 {
@@ -52,6 +55,8 @@ int initializeConfig(struct Config* config)
 
 int loadConfig(struct Config*, const char* filename)
 {
+    int rc = -1;
+    return rc;
 }
 
 int saveConfig(struct Config* config, const char* filename)
@@ -89,11 +94,25 @@ int getPeriod(const struct Config* config)
     return rc;
 }
 
-int getStateFilename(struct Config* config, char* buf, int bufsize);
+
+static int getConfigString(const char* str, char* buf, unsigned int bufsize)
+{
+    int rc;
+    unsigned int length = strnlen(str);
+
+    rc = -1;
+    if (length < bufsize) {
+        strncpy(buf, str, length);
+        rc = 0;
+    }
+    return rc;
+}
+
+int getStateFilename(struct Config* config, char* buf, unsigned int bufsize);
 {
     int rc = -1;
-    if (config && buf && bufsize>0) {
-        rc = snprintf(buf, bufsize, "%s", config->stateFilename);
+    if (config) {
+        rc = getConfigString(config->stateFilename, buf, bufsize);
     }
     return rc;
 }
@@ -101,8 +120,8 @@ int getStateFilename(struct Config* config, char* buf, int bufsize);
 int getDetectURL(struct Config* config, char* buf, int bufsize)
 {
     int rc = -1;
-    if (config && buf && bufsize>0) {
-        rc = snprintf(buf, bufsize, "%s", config->detectURL);
+    if (config) {
+        rc = getConfigString(config->detectURL, buf, bufsize);
     }
     return rc;
 }
@@ -110,8 +129,8 @@ int getDetectURL(struct Config* config, char* buf, int bufsize)
 int getUpdateURL(struct Config* config, char* buf, int bufsize)
 {
     int rc = -1;
-    if (config && buf && bufsize>0) {
-        rc = snprintf(buf, bufsize, "%s", config->updateURL);
+    if (config) {
+        rc = getConfigString(config->updateURL, buf, bufsize);
     }
     return rc;
 }
@@ -119,8 +138,8 @@ int getUpdateURL(struct Config* config, char* buf, int bufsize)
 int getHostname(struct Config* config, char* buf, int bufsize)
 {
     int rc = -1;
-    if (config && buf && bufsize>0) {
-        rc = snprintf(buf, bufsize, "%s", config->hostname);
+    if (config) {
+        rc = getConfigString(config->hostname, buf, bufsize);
     }
     return rc;
 }
@@ -128,8 +147,8 @@ int getHostname(struct Config* config, char* buf, int bufsize)
 int getUsername(struct Config* config, char* buf, int bufsize)
 {
     int rc = -1;
-    if (config && buf && bufsize>0) {
-        rc = snprintf(buf, bufsize, "%s", config->username);
+    if (config) {
+        rc = getConfigString(config->username, buf, bufsize);
     }
     return rc;
 }
@@ -137,8 +156,8 @@ int getUsername(struct Config* config, char* buf, int bufsize)
 int getPassword(struct Config* config, char* buf, int bufsize)
 {
     int rc = -1;
-    if (config && buf && bufsize>0) {
-        rc = snprintf(buf, bufsize, "%s", config->password);
+    if (config) {
+        rc = getConfigString(config->password, buf, bufsize);
     }
     return rc;
 }
@@ -164,12 +183,20 @@ int setStateFilename(struct Config* config, const char* filename)
     int rc = 0;
     if (!config) {
         rc = -1;
-    } else if (filename) {
-        config->period = period;
-        rc = 0;
-    } else {
+    } else if (!filename) {
         config->period = g_period;
         rc = 0;
+    } else {
+        size_t length = strnlen(filename, MAX_STRING_LENGTH);
+        char* buf = malloc(length + sizeof *buf);
+        if (!buf) {
+            rc = -1;
+        } else {
+            strncpy(buf, filename, length);
+            config->stateFilename = buf;
+            // now the config object owns the string
+            rc = 0;
+        }
     }
     return rc;
 }

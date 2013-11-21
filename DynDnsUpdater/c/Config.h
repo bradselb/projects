@@ -24,7 +24,7 @@ int initializeConfig(struct Config*);
 int loadConfig(struct Config*, const char* filename);
 int saveConfig(const struct Config*, const char* filename);
 
-int readConfig(struct struct Config*, int fd);
+int readConfig(struct Config*, int fd);
 int writeConfig(const struct Config*, int fd);
 
 int getPeriod(const struct Config*);
