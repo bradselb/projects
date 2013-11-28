@@ -16,31 +16,33 @@ static const char* g_UserAgent = "Self-Brad's embedded DynDNS Updater-v0.2";
 int main(int argc, char* argv[])
 {
    int rc = 0;
-   struct Config config;
-   State_t state;
+   struct Config* config = 0;
+   State_t state = 0;
    const int replySize = 512;
    char reply[replySize];
    char currentIp[32];
    int daysSinceLastUpdate;
 
-   initializeConfig(&config);
-   // apply cmd line args to config
-
    memset(reply, 0, sizeof reply);
    memset(currentIp, 0, sizeof currentIp);
 
-   state = newState();
-   if ( 0 == (state = newState())) {
+   config = newConfig();
+   //TODO apply cmd line args to config
+
+   if (!config) {
+      fprintf(stderr, "failed to allocate Config object\n");
+   }
+   else if (!(state = newState())) {
       fprintf(stderr, "failed to allocate State object\n");
    }
-   else if ( 0 != (rc = loadState(state, config.stateFilename))) {
+   else if ( 0 != (rc = loadState(state, getStateFilename(config)))) {
       fprintf(stderr, "State File does not exist\n");
       fprintf(stderr, "creating a default state file\n");
       setEnabled(state, 0);
       setUpdateTimeNow(state);
       setIp(state, "127.0.0.1");
       setResult(state, "good");
-      saveState(state, config.stateFilename);
+      saveState(state, getStateFilename(config));
    }
    else if ( !isEnabled(state) ) {
       fprintf(stderr, "not enabled.\n");
@@ -49,8 +51,8 @@ int main(int argc, char* argv[])
       fprintf(stderr, "result of previous update was '%s', not 'good'\n", getPrevResult(state));
    } 
 //int getURL(char* buf, int bufsize, const char* url, const char* userAgent, const char* user, const char* pass );
-   else if ( 0 != (rc = getURL(reply, replySize, config.detectURL, g_UserAgent, 0, 0)) ) {
-      fprintf(stderr, "getURL(%s) returned: %d\n", config.detectURL, rc);
+   else if ( 0 != (rc = getURL(reply, replySize, getDetectURL(config), g_UserAgent, 0, 0)) ) {
+      fprintf(stderr, "getURL(%s) returned: %d\n", getDetectURL(config), rc);
    }
    else if ( 0 != (rc = extractIpAddress(reply, currentIp, sizeof currentIp / sizeof currentIp[0])) ) {
       fprintf(stderr, "failed to extract Ip address from reply text\n");
@@ -59,7 +61,7 @@ int main(int argc, char* argv[])
    else if ( (daysSinceLastUpdate = daysSince(getUpdateDateTimeString(state))) < 0 ) {
       fprintf(stderr, "unable to compute days since last update\n"); 
    }
-   else if ( 0 == strcmp(currentIp, getPrevIp(state)) && daysSinceLastUpdate < config.period ) {
+   else if ( 0 == strcmp(currentIp, getPrevIp(state)) && daysSinceLastUpdate < getPeriod(config) ) {
       fprintf(stderr, "IP has not changed\n");
    }
    else { 
@@ -68,19 +70,19 @@ int main(int argc, char* argv[])
 
       // add the form info to the update URL 
       //stringstream ss;
-      //ss << config.updateURL << "?hostname=" << config.hostname << "&myip=" << currentIp;
+      //ss << getUpdateURL(config) << "?hostname=" << getHostname(config) << "&myip=" << currentIp;
       //string url(ss.str());
 
-      int urlbufsize = strlen(config.updateURL) + strlen("?hostname=") + strlen(config.hostname) + strlen("&myip=") + strlen(currentIp) + 10;
+      int urlbufsize = strlen(getUpdateURL(config)) + strlen("?hostname=") + strlen(getHostname(config)) + strlen("&myip=") + strlen(currentIp) + 10;
       char* urlbuf = (char*)malloc(urlbufsize);
       memset(urlbuf, 0, urlbufsize);
-      snprintf(urlbuf, urlbufsize, "%s?hostname=%s&myip=%s", config.updateURL, config.hostname, currentIp);
+      snprintf(urlbuf, urlbufsize, "%s?hostname=%s&myip=%s", getUpdateURL(config), getHostname(config), currentIp);
       fprintf(stderr, "URL is: %s\n", urlbuf);
 
       memset(reply, 0, sizeof reply);
       // send the updated ip address to  DynDNS.org
 //int getURL(char* buf, int bufsize, const char* url, const char* userAgent, const char* user=0, const char* pass=0 );
-      rc = getURL(reply, replySize, urlbuf, g_UserAgent, config.username, config.password);
+      rc = getURL(reply, replySize, urlbuf, g_UserAgent, getUsername(config), getPassword(config));
       free(urlbuf);
       urlbuf = 0;
 
@@ -103,10 +105,17 @@ int main(int argc, char* argv[])
 
       }
       // persit state to file. 
-      saveState(state, config.stateFilename);
+      saveState(state, getStateFilename(config));
    }
 
-DONE:
+    if (state) {
+        deleteState(state);
+    }
+
+    if (config) {
+        deleteConfig(config);
+    }
+
     return 0;
 }
 

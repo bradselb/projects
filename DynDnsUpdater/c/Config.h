@@ -15,11 +15,9 @@
 
 struct Config;
 
+// construct a default Config object
 struct Config* newConfig(void);
 void deleteConfig(struct Config*);
-
-// set this config to the (hard coded) default values
-int initializeConfig(struct Config*);
 
 int loadConfig(struct Config*, const char* filename);
 int saveConfig(const struct Config*, const char* filename);
@@ -28,12 +26,12 @@ int readConfig(struct Config*, int fd);
 int writeConfig(const struct Config*, int fd);
 
 int getPeriod(const struct Config*);
-int getStateFilename(struct Config*, char* buf, int bufsize);
-int getDetectURL(struct Config*, char* buf, int bufsize);
-int getUpdateURL(struct Config*, char* buf, int bufsize);
-int getHostname(struct Config*, char* buf, int bufsize);
-int getUsername(struct Config*, char* buf, int bufsize);
-int getPassword(struct Config*, char* buf, int bufsize);
+const char* getStateFilename(struct Config* config);
+const char* getDetectURL(struct Config* config);
+const char* getUpdateURL(struct Config* config);
+const char* getHostname(struct Config* config);
+const char* getUsername(struct Config* config);
+const char* getPassword(struct Config* config);
 
 int setPeriod(struct Config*, int period);
 int setStateFilename(struct Config*, const char*);

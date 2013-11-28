@@ -6,7 +6,7 @@ struct State;
 typedef struct State* State_t;
 
 struct State* newState();
-int deleteState(struct State*);
+void deleteState(struct State*);
 
 int loadState(struct State*, const char* filename);
 int saveState(const struct State*, const char* filename);

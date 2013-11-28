@@ -1,7 +1,10 @@
 SHELL=/bin/bash
 
-EXE = updateDynDNS 
-OBJS = Config.o getURL.o State.o timeHelpers.o extractIpAddress.o updateDynDNS.o
+EXE = updateDynDNS
+SRCS = $(wildcard *.c)
+OBJS = $(SRCS:%.c=%.o)
+
+CFLAGS += -Wall -O2 -std=gnu99
 
 all : $(EXE)
 

@@ -19,9 +19,10 @@ struct State
 // ----------------------------------------------------------------------
 State_t newState()
 {
-   struct State* state = 0;
+   struct State* state;
 
-   if ( 0 != (state = malloc(sizeof(struct State))) ) {
+   state = malloc(sizeof(struct State));
+   if (state) {
       memset(state, 0, sizeof(struct State)); 
       state->enabled = 0;
       state->dateTime = 0;
@@ -29,6 +30,22 @@ State_t newState()
       state->result = 0;
    }
    return state;
+}
+
+// ----------------------------------------------------------------------
+void deleteState(struct State* state)
+{
+   if ( state ) {
+      if (state->dateTime) {
+         free(state->dateTime);
+      }
+      if (state->ipAddress) {
+         free(state->ipAddress);
+      }
+      if (state->result) {
+         free(state->result);
+      }
+   }
 }
 
 
@@ -77,7 +94,7 @@ int loadState(struct State* state, const char* filename)
 
 
 // ----------------------------------------------------------------------
-int saveState(struct State* state, const char* filename)
+int saveState(const struct State* state, const char* filename)
 {
    int rc = -1;
    FILE* file = fopen(filename, "w");
@@ -95,44 +112,25 @@ int saveState(struct State* state, const char* filename)
 
 
 // ----------------------------------------------------------------------
-int freeState(struct State* state)
-{
-   if ( state ) {
-      if (state->dateTime) {
-         free(state->dateTime);
-         state->dateTime = 0;
-      }
-      if (state->ipAddress) {
-         free(state->ipAddress);
-         state->ipAddress = 0; 
-      }
-      if (state->result) {
-         free(state->result);
-         state->result = 0;
-      }
-   }
-}
-
-// ----------------------------------------------------------------------
-int isEnabled(struct State* state)
+int isEnabled(const struct State* state)
 {
    return (state ? state->enabled : 0);
 }
 
 // ----------------------------------------------------------------------
-const char* getUpdateDateTimeString(struct State* state)
+const char* getUpdateDateTimeString(const struct State* state)
 {
    return (state ? state->dateTime : 0);
 }
 
 // ----------------------------------------------------------------------
-const char* getPrevIp(struct State* state)
+const char* getPrevIp(const struct State* state)
 {
    return (state ? state->ipAddress : 0);
 }
 
 // ----------------------------------------------------------------------
-const char* getPrevResult(struct State* state)
+const char* getPrevResult(const struct State* state)
 {
    return (state ? state->result : 0);
 }
@@ -180,7 +178,6 @@ int setIp(struct State* state, const char* ip)
    if ( state && ip ) {
       if ( state->ipAddress ) {
          free(state->ipAddress);
-         state->ipAddress = 0;
       }
 
       int size = 1 + strlen(ip);
@@ -189,6 +186,7 @@ int setIp(struct State* state, const char* ip)
       strncpy(state->ipAddress, ip, size);
       rc = 0;
    }
+   return rc;
 }
 
 // ----------------------------------------------------------------------
@@ -198,15 +196,15 @@ int setDateTime(struct State* state, const char* dateTime)
    if ( state && dateTime ) {
       if ( state->dateTime ) {
          free(state->dateTime);
-         state->dateTime = 0;
       }
 
       int size = 1 + strlen(dateTime);
-      state->dateTime = (char*)malloc(size);
+      state->dateTime = malloc(size);
       memset(state->dateTime, 0, size);
       strncpy(state->dateTime, dateTime, size);
       rc = 0;
    }
+   return rc;
 }
 
 
@@ -217,14 +215,13 @@ int setResult(struct State* state, const char* result)
    if ( state && result ) {
       if ( state->result ) {
          free(state->result);
-         state->result = 0;
       }
 
-      int size = 1 + strlen(result);
-      state->result = (char*)malloc(size);
-      memset(state->result, 0, size);
-      strncpy(state->result, result, size);
+      unsigned int length = strlen(result);
+      state->result = malloc(length +1);
+      strncpy(state->result, result, length);
       rc = 0;
    }
+   return rc;
 }
 

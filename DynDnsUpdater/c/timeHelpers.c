@@ -1,8 +1,8 @@
 #include "timeHelpers.h"
 
-//#define _XOPEN_SOURCE /* glibc2 needs this */
-#include <time.h> 
 #include <string.h> // memset()
+//#define _XOPEN_SOURCE 
+#include <time.h> 
 
 
    // format is: 28-Feb-2011_18:34:09

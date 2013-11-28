@@ -1,4 +1,5 @@
-- Complete the Config object 
+- revisit State.c with an eye toward following Config.c approach
+X Complete the Config object 
 - fix / improve security of Config file? 
 - fix / improve current IP addr discovery
 - improve ip address extraction. 
