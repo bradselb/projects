@@ -26,6 +26,7 @@ int daysSince(const char* datetime)
    time_t timenow = time(0);
 
    struct tm tm;
+   memset(&tm, 0, sizeof tm);
    strptime(datetime, g_TimeFormat, &tm);
 
    time_t timepast = mktime(&tm);

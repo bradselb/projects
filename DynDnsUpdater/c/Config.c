@@ -29,7 +29,7 @@ static const char* g_password = "test";
 //hostname("test.homeip.net"),
 
 static const int MAX_STRING_LENGTH = 4095;
-//static const int MAX_STRING_BUF_SIZE = MAX_STRING_LENGTH + 1;
+static const int BUF_SIZE = 4096;
 
 
 
@@ -53,7 +53,7 @@ struct Config* newConfig(void)
 static void deleteConfigString(char* s)
 {
     if(s) {
-        memset(s, 0, strlen(s));
+        memset(s, 0, strnlen(s, MAX_STRING_LENGTH));
         free(s);
     }
 }
@@ -102,6 +102,57 @@ int saveConfig(const struct Config* config, const char* filename)
       rc = 0;
    }
    return rc;
+}
+
+// expectations: 
+//  1) the file descriptor is associated with a valid open plain test file
+//  2) the content of the file is roughly conformat to that which is written by 
+//     the function saveConfig() above. That is, each line contains a simple 
+//     key value pair delimited by whitespace only (implies whitespace not 
+//     allowed in either the key string nor in the value. 
+//  3) key value pairs may be arranged in any order.
+//  4) whole file fits in one buffer (4096 bytes) !!! ?!?!?!?!
+//
+// plan: 
+// read the whole file in at once.
+int readConfig(struct Config* config, int fd)
+{
+    int rc = 0;
+    int bufsize = BUF_SIZE;
+    char* buf;
+    ssize_t length; 
+
+    buf = malloc(bufsize);
+    
+    if (!config || !buf) {
+        rc = -1;
+        goto out;
+    }
+
+    memset(buf, 0, bufsize);
+    while (0 != (length = read(fd, buf, bufsize-1))) {
+        if (length < 0) {
+            rc = errno;
+            break;
+        }
+
+    }
+
+
+out:
+    if (buf) {
+        memset(buf, 0, bufsize);
+        free(buf);
+    }
+
+    return rc;
+}
+
+
+int writeConfig(const struct Config* config, int fd)
+{
+    int rc = -1;
+    return rc;
 }
 
 

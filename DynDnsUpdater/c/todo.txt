@@ -1,5 +1,6 @@
 - revisit State.c with an eye toward following Config.c approach
-X Complete the Config object 
+- Complete the Config object
+   loadConfig(), readConfig(0, writeConfig() all have trivial implementations 
 - fix / improve security of Config file? 
 - fix / improve current IP addr discovery
 - improve ip address extraction. 
@@ -11,4 +12,6 @@ X Complete the Config object
 - make it a proper daemon
 - write to syslog
 - keep a history of the state...or, derive it from log file? 
-- 
+
+ideas for new features: 
+- use sqlite data base to keep track of update history.
