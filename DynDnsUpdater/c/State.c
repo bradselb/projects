@@ -181,8 +181,8 @@ int setIp(struct State* state, const char* ip)
       }
 
       int size = 1 + strlen(ip);
-      state->ipAddress = (char*)malloc(size);
-      memset(state->ipAddress, 0, size);
+      state->ipAddress = malloc(size);
+      //memset(state->ipAddress, 0, size);
       strncpy(state->ipAddress, ip, size);
       rc = 0;
    }
@@ -200,7 +200,7 @@ int setDateTime(struct State* state, const char* dateTime)
 
       int size = 1 + strlen(dateTime);
       state->dateTime = malloc(size);
-      memset(state->dateTime, 0, size);
+      //memset(state->dateTime, 0, size);
       strncpy(state->dateTime, dateTime, size);
       rc = 0;
    }
@@ -217,9 +217,9 @@ int setResult(struct State* state, const char* result)
          free(state->result);
       }
 
-      unsigned int length = strlen(result);
-      state->result = malloc(length +1);
-      strncpy(state->result, result, length);
+      int size = 1 + strlen(result);
+      state->result = malloc(size);
+      strncpy(state->result, result, size);
       rc = 0;
    }
    return rc;

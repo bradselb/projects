@@ -1,7 +1,8 @@
+#define _XOPEN_SOURCE 
+
 #include "timeHelpers.h"
 
 #include <string.h> // memset()
-//#define _XOPEN_SOURCE 
 #include <time.h> 
 
 

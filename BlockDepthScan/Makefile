@@ -2,12 +2,15 @@ EXE = blockscan
 SOURCES = $(wildcard *.c)
 OBJECTS = $(SOURCES:%.c=%.o)
 
-CFLAGS += -Wall -O2 -std=gnu99 
+BRAD_LIBDIR = ../lib
+
+
+CFLAGS += -Wall -O2 -std=gnu99 -I$(BRAD_LIBDIR)
 
 all : $(EXE)
 
 $(EXE) : $(OBJECTS)
-	$(CC) -o $@ $^
+	$(CC) -o $@ -L$(BRAD_LIBDIR) $^ -lbrad
 
 %.o : %.c
 	$(CC) -c $(CFLAGS) $?

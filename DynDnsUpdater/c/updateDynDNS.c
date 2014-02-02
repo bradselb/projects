@@ -10,24 +10,24 @@
 
 // update this with major revisions. 
 // req'd format is: "Company-model-version"
-static const char* g_UserAgent = "Self-Brad's embedded DynDNS Updater-v0.2";
+static const char* g_UserAgent = "Self-Brad's embedded DynDNS Updater-v0.7";
 
 
+// --------------------------------------------------------------------------
 int main(int argc, char* argv[])
 {
    int rc = 0;
    struct Config* config = 0;
    State_t state = 0;
-   const int replySize = 512;
-   char reply[replySize];
    char currentIp[32];
    int daysSinceLastUpdate;
+   const int replySize = 512;
+   char reply[replySize];
 
    memset(reply, 0, sizeof reply);
    memset(currentIp, 0, sizeof currentIp);
 
-   config = newConfig();
-   //TODO apply cmd line args to config
+   config = createDefaultConfig();
 
    if (!config) {
       fprintf(stderr, "failed to allocate Config object\n");
@@ -62,26 +62,22 @@ int main(int argc, char* argv[])
       fprintf(stderr, "unable to compute days since last update\n"); 
    }
    else if ( 0 == strcmp(currentIp, getPrevIp(state)) && daysSinceLastUpdate < getPeriod(config) ) {
-      fprintf(stderr, "IP has not changed\n");
+      fprintf(stderr, "current IP Address is: '%s'\n", currentIp);
+      fprintf(stderr, "IP has not changed and only %d days have elapsed since last update.\n", daysSinceLastUpdate);
    }
    else { 
 
       fprintf(stderr, "current IP Address is: '%s'\n", currentIp);
 
       // add the form info to the update URL 
-      //stringstream ss;
-      //ss << getUpdateURL(config) << "?hostname=" << getHostname(config) << "&myip=" << currentIp;
-      //string url(ss.str());
-
       int urlbufsize = strlen(getUpdateURL(config)) + strlen("?hostname=") + strlen(getHostname(config)) + strlen("&myip=") + strlen(currentIp) + 10;
-      char* urlbuf = (char*)malloc(urlbufsize);
+      char* urlbuf = malloc(urlbufsize);
       memset(urlbuf, 0, urlbufsize);
       snprintf(urlbuf, urlbufsize, "%s?hostname=%s&myip=%s", getUpdateURL(config), getHostname(config), currentIp);
       fprintf(stderr, "URL is: %s\n", urlbuf);
 
-      memset(reply, 0, sizeof reply);
       // send the updated ip address to  DynDNS.org
-//int getURL(char* buf, int bufsize, const char* url, const char* userAgent, const char* user=0, const char* pass=0 );
+      memset(reply, 0, sizeof reply);
       rc = getURL(reply, replySize, urlbuf, g_UserAgent, getUsername(config), getPassword(config));
       free(urlbuf);
       urlbuf = 0;
@@ -91,7 +87,7 @@ int main(int argc, char* argv[])
          fprintf(stderr, "getURL() returned: %d", rc);
          fprintf(stderr, "%s\n", reply);
       } else {
-         fprintf(stdout, "Update result is: %s",  reply);
+         fprintf(stdout, "Update result is: %s\n",  reply);
          //stringstream is(reply);
          //string result;
          //is >> result;
@@ -118,27 +114,4 @@ int main(int argc, char* argv[])
 
     return 0;
 }
-
-#if 0 
-namespace {
-int strsubstr(char* dest, int destsize, const char* begin, const char* end)
-{
-   int rc = 0;
-   if ( !(dest && begin && end) ) {
-      rc = -1;
-   } else if ( destsize < (end - begin) ) {
-      rc = -2;
-   } else {
-      char* src = begin;
-      while ( src != end ) {
-         *dest++ = *src++;
-      }
-      *dest = 0;
-      rc = 0; // success!
-   }
-   return rc;
-}
-}; // namespace.
-
-#endif
 

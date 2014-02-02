@@ -4,12 +4,15 @@ EXE = updateDynDNS
 SRCS = $(wildcard *.c)
 OBJS = $(SRCS:%.c=%.o)
 
-CFLAGS += -Wall -O2 -std=gnu99
+BRAD_LIBDIR = ../../lib
+
+CFLAGS += -Wall -O2 -std=gnu99 -I$(BRAD_LIBDIR)
+LDFLAGS += -L$(BRAD_LIBDIR)
 
 all : $(EXE)
 
 $(EXE) : $(OBJS)
-	$(CC)  $(LDFLAGS) -o $@ $(OBJS) -lcurl -lrt
+	$(CC)  $(LDFLAGS) -o $@ $(OBJS) -lcurl -lrt -lbrad
 
 
 %.o : %.c

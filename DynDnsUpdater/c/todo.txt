@@ -1,6 +1,12 @@
+- add cmd line arg to specify the config file
+
 - revisit State.c with an eye toward following Config.c approach
+
 - Complete the Config object
-   loadConfig(), readConfig(0, writeConfig() all have trivial implementations 
+   loadConfig(), readConfig(0, writeConfig() all have trivial implementations
+
+- read config file from disk instead of always using the default config. 
+
 - fix / improve security of Config file? 
 - fix / improve current IP addr discovery
 - improve ip address extraction. 
@@ -8,10 +14,14 @@
 - be const correct. 
 - create a separate GUI tool to create and manip the Config file
 - move config and state files to proper locations
+
 - accept command line args
+  * config file path
+  * version
+
 - make it a proper daemon
 - write to syslog
 - keep a history of the state...or, derive it from log file? 
 
 ideas for new features: 
-- use sqlite data base to keep track of update history.
+- use sqlite database to keep track of update history.

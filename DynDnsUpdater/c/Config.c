@@ -1,8 +1,16 @@
 #include "Config.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "tokenize.h"
 
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <errno.h>
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h> // read(), write()
+
+// --------------------------------------------------------------------------
 struct Config
 {
    int period; // force an update every <period> days
@@ -14,8 +22,9 @@ struct Config
    char* password;  // my DynDNS password
 };
 
+// --------------------------------------------------------------------------
 static const int g_period = 28; // days
-static const char* g_stateFilename = "/var/run/DynDnsUpdaterState.dat";
+static const char* g_stateFilename = "/var/tmp/DynDnsUpdaterState.dat";
 static const char* g_detectURL = "http://checkip.dyndns.org";
 static const char* g_updateURL = "http://members.dyndns.org/nic/update";
 //static const char* g_hostname = "test.dyndns.org";
@@ -28,12 +37,18 @@ static const char* g_password = "test";
 //hostname("test.dnsalias.com"),
 //hostname("test.homeip.net"),
 
-static const int MAX_STRING_LENGTH = 4095;
-static const int BUF_SIZE = 4096;
+// --------------------------------------------------------------------------
+#define MAX_STRING_LENGTH 1023
+
+// maximum size of buffer used to read/write the whole config file. The magic
+// number 8 comes from there being seven elements, seven lines in the file.
+// Each line maybe a little longer than the max string length.
+#define MAX_BUF_SIZE  (8 * (1 + MAX_STRING_LENGTH))
 
 
 
-struct Config* newConfig(void)
+// --------------------------------------------------------------------------
+struct Config* createDefaultConfig(void)
 {
     struct Config* config;
     config = malloc(sizeof(struct Config));
@@ -50,6 +65,7 @@ struct Config* newConfig(void)
     return config;
 }
 
+// --------------------------------------------------------------------------
 static void deleteConfigString(char* s)
 {
     if(s) {
@@ -58,6 +74,7 @@ static void deleteConfigString(char* s)
     }
 }
 
+// --------------------------------------------------------------------------
 void deleteConfig(struct Config* config)
 {
     if (config) {
@@ -67,18 +84,20 @@ void deleteConfig(struct Config* config)
         deleteConfigString(config->hostname);
         deleteConfigString(config->username);
         deleteConfigString(config->password);
-        memset(config, 0, sizeof *config);
+        memset(config, 0, sizeof(struct Config));
         free(config);
     }
 }
 
 
-int loadConfig(struct Config* config, const char* filename)
+// --------------------------------------------------------------------------
+struct Config* loadConfig(const char* filename)
 {
-    int rc = -1;
-    return rc;
+    struct Config* config = 0;
+    return config;
 }
 
+// --------------------------------------------------------------------------
 int saveConfig(const struct Config* config, const char* filename)
 {
    int rc = -1;
@@ -104,51 +123,173 @@ int saveConfig(const struct Config* config, const char* filename)
    return rc;
 }
 
+
+// --------------------------------------------------------------------------
+static int is_file_size_less_than(int fd, ssize_t size)
+{
+    int rc = 0; // no it is not. 
+
+    int err;
+    struct stat st;
+
+    memset(&st, 0, sizeof st);
+    
+    err = fstat(fd, &st);
+    if (0 == err && st.st_size < size) {
+        // success.
+        rc = 1;
+    }
+    return rc;
+}
+
+
+// --------------------------------------------------------------------------
 // expectations: 
-//  1) the file descriptor is associated with a valid open plain test file
-//  2) the content of the file is roughly conformat to that which is written by 
-//     the function saveConfig() above. That is, each line contains a simple 
-//     key value pair delimited by whitespace only (implies whitespace not 
+//  1) the file descriptor is associated with a valid open plain text file
+//  2) the content of the file is roughly conformat to that which is written 
+//     by the function saveConfig() above. That is, each line contains a simple 
+//     key-value pair delimited by whitespace only (implies whitespace not 
 //     allowed in either the key string nor in the value. 
-//  3) key value pairs may be arranged in any order.
-//  4) whole file fits in one buffer (4096 bytes) !!! ?!?!?!?!
+//  3) key-value pairs may be arranged in any order.
+//  4) whole file fits in one buffer...rethink this.
 //
 // plan: 
 // read the whole file in at once.
-int readConfig(struct Config* config, int fd)
+// tokenize the buffer and extract argv and argc
+// iterate over the argv and compare each key
+struct Config* readConfig(int fd)
 {
-    int rc = 0;
-    int bufsize = BUF_SIZE;
-    char* buf;
-    ssize_t length; 
+    struct Config* config = 0;
+    char* buf = 0;
+    size_t bufsize; // allocated size
+    ssize_t bytes_read; // how many bytes read this time
+    size_t length; // how many bytes are in the bufffer
 
+    char* tokbuf;
+    size_t tokbufsize;
+    int tokcount;
+    //int err;
+
+    if (!is_file_size_less_than(fd, MAX_BUF_SIZE)) {
+        // file too big.
+        goto out_final;
+    }
+
+    bufsize = MAX_BUF_SIZE;
     buf = malloc(bufsize);
-    
-    if (!config || !buf) {
-        rc = -1;
-        goto out;
+    if (!buf) {
+        goto out_free_buf;
     }
 
     memset(buf, 0, bufsize);
-    while (0 != (length = read(fd, buf, bufsize-1))) {
-        if (length < 0) {
-            rc = errno;
-            break;
-        }
 
+    // read the whole file into the read buffer.
+    length = 0;
+    while(length < bufsize && 0 < (bytes_read = read(fd, (buf+length), (bufsize-length)-1))) {
+        length += bytes_read;
+    }
+
+    tokcount = tokenize(buf, bufsize, "= \t:;\n", &tokbufsize);
+    tokbuf = buf; // sugar. 
+
+    // create an array of pointers to the individual tokens in the buffer.
+    size_t argvsize = (tokcount + 1) * sizeof(char*);
+    char** argv = malloc(argvsize);
+    if (!argv) {
+        goto out_free_buf;
+    }
+    memset(argv, 0, argvsize);
+
+
+    int argc = init_argv_from_tokenbuf(argv, tokbuf, tokbufsize, tokcount);
+    if (argc != tokcount) {
+        // failed to extract argv?
+        goto out_free_argv;
     }
 
 
-out:
+    // allocate a config object.
+    config = malloc(sizeof(struct Config));
+    if (!config) {
+        goto out_free_argv;
+    }
+    memset(config, 0, sizeof(struct Config));
+
+
+
+    // iterate over the tokens and pick off key-value pairs
+
+    char** token;
+    token = argv;
+    while (token && *token) {
+        if (0 == strncmp(*token, "period", 5)) {
+            ++token;
+            if (token && *token) {
+                int period = strtol(*token, 0, 0);
+                setPeriod(config, period);
+                ++token;
+            }
+        } else if (0 == strncmp(*token, "State", 5)) {
+            ++token;
+            if (token && *token) {
+                setStateFilename(config, *token);
+                ++token;
+            }
+        } else if (0 == strncmp(*token, "Detect", 5)) {
+            ++token;
+            if (token && *token) {
+                setDetectURL(config, *token);
+                ++token;
+            }
+        } else if (0 == strncmp(*token, "Update", 5)) {
+            ++token;
+            if (token && *token) {
+                setUpdateURL(config, *token);
+                ++token;
+            }
+        } else if (0 == strncmp(*token, "Hostname", 5)) {
+            ++token;
+            if (token && *token) {
+                setHostname(config, *token);
+                ++token;
+            }
+        } else if (0 == strncmp(*token, "Username", 5)) {
+            ++token;
+            if (token && *token) {
+                setUsername(config, *token);
+                ++token;
+            }
+        } else if (0 == strncmp(*token, "Password", 5)) {
+            ++token;
+            if (token && *token) {
+                setPassword(config, *token);
+                ++token;
+            }        
+        } else {
+            // unrecognized key word. garbage?
+            ++token;
+        }
+    } // while 
+
+
+out_free_argv:
+    if (argv) {
+        memset(argv, 0, argvsize);
+        free(argv);
+    }
+
+out_free_buf:
     if (buf) {
         memset(buf, 0, bufsize);
         free(buf);
     }
 
-    return rc;
+out_final:
+    return config;
 }
 
 
+// --------------------------------------------------------------------------
 int writeConfig(const struct Config* config, int fd)
 {
     int rc = -1;
@@ -156,6 +297,7 @@ int writeConfig(const struct Config* config, int fd)
 }
 
 
+// --------------------------------------------------------------------------
 int getPeriod(const struct Config* config)
 {
     int rc = -1;
@@ -165,37 +307,44 @@ int getPeriod(const struct Config* config)
     return rc;
 }
 
+// --------------------------------------------------------------------------
 const char* getStateFilename(struct Config* config)
 {
     return (config ? config->stateFilename : 0);
 }
 
+// --------------------------------------------------------------------------
 const char* getDetectURL(struct Config* config)
 {
     return (config ? config->detectURL : 0);
 }
 
+// --------------------------------------------------------------------------
 const char* getUpdateURL(struct Config* config)
 {
     return (config ? config->updateURL : 0);
 }
 
+// --------------------------------------------------------------------------
 const char* getHostname(struct Config* config)
 {
     return (config ? config->hostname : 0);
 }
 
+// --------------------------------------------------------------------------
 const char* getUsername(struct Config* config)
 {
     return (config ? config->username : 0);
 }
 
+// --------------------------------------------------------------------------
 const char* getPassword(struct Config* config)
 {
     return (config ? config->password : 0);
 }
 
 
+// --------------------------------------------------------------------------
 int setPeriod(struct Config* config, int period)
 {
     int rc = 0;
@@ -212,6 +361,15 @@ int setPeriod(struct Config* config, int period)
 }
 
 
+
+
+// TODO:
+// GOOD Grief!!! 
+// Factor out the common function !!!
+
+
+
+// --------------------------------------------------------------------------
 int setStateFilename(struct Config* config, const char* filename)
 {
     int rc;
@@ -241,6 +399,7 @@ int setStateFilename(struct Config* config, const char* filename)
     return rc;
 }
 
+// --------------------------------------------------------------------------
 int setDetectURL(struct Config* config, const char* src)
 {
     int rc;
@@ -265,6 +424,7 @@ int setDetectURL(struct Config* config, const char* src)
     return rc;
 }
 
+// --------------------------------------------------------------------------
 int setUpdateURL(struct Config* config, const char* src)
 {
     int rc;
@@ -289,6 +449,7 @@ int setUpdateURL(struct Config* config, const char* src)
     return rc;
 }
 
+// --------------------------------------------------------------------------
 int setHostname(struct Config* config, const char* src)
 {
     int rc;
@@ -313,6 +474,7 @@ int setHostname(struct Config* config, const char* src)
     return rc;
 }
 
+// --------------------------------------------------------------------------
 int setUsername(struct Config* config, const char* src)
 {
     int rc;
@@ -337,6 +499,7 @@ int setUsername(struct Config* config, const char* src)
     return rc;
 }
 
+// --------------------------------------------------------------------------
 int setPassword(struct Config* config, const char* src)
 {
     int rc;
