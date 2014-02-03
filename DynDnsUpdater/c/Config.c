@@ -8,6 +8,7 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 #include <unistd.h> // read(), write()
 
 // --------------------------------------------------------------------------
@@ -23,14 +24,14 @@ struct Config
 };
 
 // --------------------------------------------------------------------------
-static const int g_period = 28; // days
-static const char* g_stateFilename = "/var/tmp/DynDnsUpdaterState.dat";
-static const char* g_detectURL = "http://checkip.dyndns.org";
-static const char* g_updateURL = "http://members.dyndns.org/nic/update";
-//static const char* g_hostname = "test.dyndns.org";
-static const char* g_hostname = "test.ath.cx";
-static const char* g_username = "test";
-static const char* g_password = "test";
+static const int DefaultPeriod = 28; // days
+static const char* DefaultStateFilename = "/var/tmp/DynDnsUpdaterState.dat";
+static const char* DefaultDetectURL = "http://checkip.dyndns.org";
+static const char* DefaultUpdateURL = "http://members.dyndns.org/nic/update";
+//static const char* DefaultHostname = "test.dyndns.org";
+static const char* DefaultHostname = "test.ath.cx";
+static const char* DefaultUserName = "test";
+static const char* DefaultPassword = "test";
 
 //hostname("test.dnsalias.net"),
 //hostname("test.dnsalias.org"),
@@ -38,7 +39,7 @@ static const char* g_password = "test";
 //hostname("test.homeip.net"),
 
 // --------------------------------------------------------------------------
-#define MAX_STRING_LENGTH 1023
+#define MAX_STRING_LENGTH 511
 
 // maximum size of buffer used to read/write the whole config file. The magic
 // number 8 comes from there being seven elements, seven lines in the file.
@@ -54,13 +55,13 @@ struct Config* createDefaultConfig(void)
     config = malloc(sizeof(struct Config));
     if (config) {
         memset(config, 0, sizeof(struct Config));
-        setPeriod(config, g_period);
-        setStateFilename(config, g_stateFilename);
-        setDetectURL(config, g_detectURL);
-        setUpdateURL(config, g_updateURL);
-        setHostname(config, g_hostname);
-        setUsername(config, g_username);
-        setPassword(config, g_password);
+        setPeriod(config, DefaultPeriod);
+        setStateFilename(config, DefaultStateFilename);
+        setDetectURL(config, DefaultDetectURL);
+        setUpdateURL(config, DefaultUpdateURL);
+        setHostname(config, DefaultHostname);
+        setUsername(config, DefaultUserName);
+        setPassword(config, DefaultPassword);
     }
     return config;
 }
@@ -94,6 +95,19 @@ void deleteConfig(struct Config* config)
 struct Config* loadConfig(const char* filename)
 {
     struct Config* config = 0;
+    int fd;
+
+    if (!filename) {
+        // do nothing.
+    } else if ((fd = open(filename, O_RDONLY)) < 0) {
+        // file open failed.
+        fprintf(stderr, "(%s:%d) %s() failed to open file '%s'\n", __FILE__,__LINE__,__FUNCTION__,filename);
+        perror(0);
+    } else {
+        config = readConfig(fd);
+        close(fd);
+    }
+
     return config;
 }
 
@@ -189,7 +203,7 @@ struct Config* readConfig(int fd)
         length += bytes_read;
     }
 
-    tokcount = tokenize(buf, bufsize, "= \t:;\n", &tokbufsize);
+    tokcount = tokenize(buf, bufsize, " \t\n", &tokbufsize);
     tokbuf = buf; // sugar. 
 
     // create an array of pointers to the individual tokens in the buffer.
@@ -308,37 +322,37 @@ int getPeriod(const struct Config* config)
 }
 
 // --------------------------------------------------------------------------
-const char* getStateFilename(struct Config* config)
+const char* getStateFilename(const struct Config* config)
 {
     return (config ? config->stateFilename : 0);
 }
 
 // --------------------------------------------------------------------------
-const char* getDetectURL(struct Config* config)
+const char* getDetectURL(const struct Config* config)
 {
     return (config ? config->detectURL : 0);
 }
 
 // --------------------------------------------------------------------------
-const char* getUpdateURL(struct Config* config)
+const char* getUpdateURL(const struct Config* config)
 {
     return (config ? config->updateURL : 0);
 }
 
 // --------------------------------------------------------------------------
-const char* getHostname(struct Config* config)
+const char* getHostname(const struct Config* config)
 {
     return (config ? config->hostname : 0);
 }
 
 // --------------------------------------------------------------------------
-const char* getUsername(struct Config* config)
+const char* getUsername(const struct Config* config)
 {
     return (config ? config->username : 0);
 }
 
 // --------------------------------------------------------------------------
-const char* getPassword(struct Config* config)
+const char* getPassword(const struct Config* config)
 {
     return (config ? config->password : 0);
 }
@@ -354,7 +368,7 @@ int setPeriod(struct Config* config, int period)
         config->period = period;
         rc = 0;
     } else {
-        config->period = g_period;
+        config->period = DefaultPeriod;
         rc = 0;
     }
     return rc;
@@ -378,17 +392,17 @@ int setStateFilename(struct Config* config, const char* filename)
     const char* src = filename;
 
     if (!filename) {
-        src = g_stateFilename;
+        src = DefaultStateFilename;
     }
 
     length = strnlen(src, MAX_STRING_LENGTH);
 
     if (!config) {
         rc = -1;
-    } else if (!(buf = malloc(length + sizeof *buf))) {
+    } else if (!(buf = malloc(length + 1))) {
         rc = -1;
     } else {
-        strncpy(buf, src, length);
+        strncpy(buf, src, length+1);
         if (config->stateFilename) {
             free(config->stateFilename);
         }
@@ -410,10 +424,10 @@ int setDetectURL(struct Config* config, const char* src)
 
     if (!config || !src) {
         rc = -1;
-    } else if (!(buf = malloc(length + sizeof *buf))) {
+    } else if (!(buf = malloc(length + 1))) {
         rc = -1;
     } else {
-        strncpy(buf, src, length);
+        strncpy(buf, src, length+1);
         if (config->detectURL) {
             free(config->detectURL);
         }
@@ -435,10 +449,10 @@ int setUpdateURL(struct Config* config, const char* src)
 
     if (!config || !src) {
         rc = -1;
-    } else if (!(buf = malloc(length + sizeof *buf))) {
+    } else if (!(buf = malloc(length + 1))) {
         rc = -1;
     } else {
-        strncpy(buf, src, length);
+        strncpy(buf, src, length+1);
         if (config->updateURL) {
             free(config->updateURL);
         }
@@ -460,10 +474,10 @@ int setHostname(struct Config* config, const char* src)
 
     if (!config || !src) {
         rc = -1;
-    } else if (!(buf = malloc(length + sizeof *buf))) {
+    } else if (!(buf = malloc(length + 1))) {
         rc = -1;
     } else {
-        strncpy(buf, src, length);
+        strncpy(buf, src, length+1);
         if (config->hostname) {
             free(config->hostname);
         }
@@ -485,11 +499,12 @@ int setUsername(struct Config* config, const char* src)
 
     if (!config || !src) {
         rc = -1;
-    } else if (!(buf = malloc(length + sizeof *buf))) {
+    } else if (!(buf = malloc(length + 1))) {
         rc = -1;
     } else {
-        strncpy(buf, src, length);
+        strncpy(buf, src, length+1);
         if (config->username) {
+            memset(config->username, 0, strlen(config->username));
             free(config->username);
         }
         config->username = buf;
@@ -510,11 +525,12 @@ int setPassword(struct Config* config, const char* src)
 
     if (!config || !src) {
         rc = -1;
-    } else if (!(buf = malloc(length + sizeof *buf))) {
+    } else if (!(buf = malloc(length + 1))) {
         rc = -1;
     } else {
-        strncpy(buf, src, length);
+        strncpy(buf, src, length+1);
         if (config->password) {
+            memset(config->password, 0, strlen(config->password));
             free(config->password);
         }
         config->password = buf;
@@ -524,5 +540,32 @@ int setPassword(struct Config* config, const char* src)
     return rc;
 }
 
+// --------------------------------------------------------------------------
+int compareConfig(const struct Config* cfg0, const struct Config* cfg1)
+{
+    int rc;
+
+    if (!cfg0 || !cfg1)
+    {
+        rc = -1; // not able to compare the two.
+    }
+
+    else if (getPeriod(cfg0) != getPeriod(cfg1) ||
+        0 != strcmp(getStateFilename(cfg0), getStateFilename(cfg1)) ||
+        0 != strcmp(getDetectURL(cfg0), getDetectURL(cfg1)) ||
+        0 != strcmp(getUpdateURL(cfg0), getUpdateURL(cfg1)) ||
+        0 != strcmp(getHostname(cfg0), getHostname(cfg1)) ||
+        0 != strcmp(getUsername(cfg0), getUsername(cfg1)) ||
+        0 != strcmp(getPassword(cfg0), getPassword(cfg1)))
+    {
+        rc = 1; // the two are different
+    }
+
+    else {
+        rc = 0; // they are the same.
+    }
+
+    return rc;
+}
 
 

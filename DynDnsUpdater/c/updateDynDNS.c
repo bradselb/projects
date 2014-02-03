@@ -18,7 +18,7 @@ int main(int argc, char* argv[])
 {
    int rc = 0;
    struct Config* config = 0;
-   State_t state = 0;
+   struct State* state = 0;
    char currentIp[32];
    int daysSinceLastUpdate;
    const int replySize = 512;
@@ -88,16 +88,12 @@ int main(int argc, char* argv[])
          fprintf(stderr, "%s\n", reply);
       } else {
          fprintf(stdout, "Update result is: %s\n",  reply);
-         //stringstream is(reply);
-         //string result;
-         //is >> result;
-         //char result[12];
 
          // update the state
          setEnabled(state, 1);
          setUpdateTimeNow(state);
          setIp(state, currentIp);
-         //setResult(state, result);
+         setResult(state, reply);
 
       }
       // persit state to file. 

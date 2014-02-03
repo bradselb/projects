@@ -141,7 +141,7 @@ int setEnabled(struct State* state, int isEnabled)
 {
    int rc = -1;
    if ( state ) {
-      state->enabled = (isEnabled ? 1 : 0);
+      state->enabled = (isEnabled != 0);
       rc = 0;
    }
    return rc;
@@ -161,10 +161,10 @@ int setUpdateTimeNow(struct State* state)
          state->dateTime = 0;
       }
 
-      const int len = 32;
-      state->dateTime = (char*)malloc(len);
-      memset(state->dateTime, 0, len);
-      getTimeNow(state->dateTime, len-1);
+      const int size = 32;
+      state->dateTime = malloc(size);
+      memset(state->dateTime, 0, size);
+      getTimeNow(state->dateTime, size-1);
       rc = 0;
    }
 

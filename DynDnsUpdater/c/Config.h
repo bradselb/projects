@@ -26,10 +26,10 @@ struct Config* loadConfig(const char* filename);
 // returns zero if successful, non zero otherwise.
 int saveConfig(const struct Config*, const char* filename);
 
-// low level functions to deal with persitent config similar to 
-// load and save above.
+// low level functions to deal with persitent config
+// similar to load and save above.
 struct Config* readConfig(int fd);
-int writeConfig(const struct Config*, int fd);
+//int writeConfig(const struct Config*, int fd);// not yet implemented. 
 
 // only need to do this if there is no previously saved config 
 // returns NULL if there was an error.
@@ -37,12 +37,12 @@ struct Config* createDefaultConfig(void);
 
 // access data members
 int getPeriod(const struct Config*);
-const char* getStateFilename(struct Config* config);
-const char* getDetectURL(struct Config* config);
-const char* getUpdateURL(struct Config* config);
-const char* getHostname(struct Config* config);
-const char* getUsername(struct Config* config);
-const char* getPassword(struct Config* config);
+const char* getStateFilename(const struct Config* config);
+const char* getDetectURL(const struct Config* config);
+const char* getUpdateURL(const struct Config* config);
+const char* getHostname(const struct Config* config);
+const char* getUsername(const struct Config* config);
+const char* getPassword(const struct Config* config);
 
 // manipulate data members
 int setPeriod(struct Config*, int period);
@@ -53,5 +53,6 @@ int setHostname(struct Config*, const char*);
 int setUsername(struct Config*, const char*);
 int setPassword(struct Config*, const char*);
 
+int compareConfig(const struct Config*, const struct Config*);
 #endif //!defined DYNDNSUPDATERCONFIG_H
 
