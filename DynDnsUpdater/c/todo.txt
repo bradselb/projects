@@ -1,12 +1,20 @@
-- add cmd line arg to specify the config file
-
-- revisit State.c with an eye toward following Config.c approach
+- accept command line args
+  * config file path
+  * version
+  * override config file params
 
 - Complete the Config object
-   loadConfig(), readConfig(0, writeConfig() all have trivial implementations
+   loadConfig() - done.
+   readConfig() - done
+   writeConfig() 
+
+- unit tests
+   Config - done.
+   State 
 
 - read config file from disk instead of always using the default config. 
 
+- revisit State.c with an eye toward following Config.c approach
 - fix / improve security of Config file? 
 - fix / improve current IP addr discovery
 - improve ip address extraction. 
@@ -14,10 +22,6 @@
 - be const correct. 
 - create a separate GUI tool to create and manip the Config file
 - move config and state files to proper locations
-
-- accept command line args
-  * config file path
-  * version
 
 - make it a proper daemon
 - write to syslog
