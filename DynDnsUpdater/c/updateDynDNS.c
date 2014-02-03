@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
    else if ( !isEnabled(state) ) {
       fprintf(stderr, "not enabled.\n");
    } 
-   else if ( 0 != strcmp(getPrevResult(state), "good") ) {
+   else if ( 0 != strncmp(getPrevResult(state), "good", 4) ) {
       fprintf(stderr, "result of previous update was '%s', not 'good'\n", getPrevResult(state));
    } 
 //int getURL(char* buf, int bufsize, const char* url, const char* userAgent, const char* user, const char* pass );
