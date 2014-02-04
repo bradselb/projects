@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
    else if ( 0 != (rc = loadState(state, getStateFilename(config)))) {
       fprintf(stderr, "State File does not exist\n");
       fprintf(stderr, "creating a default state file\n");
-      setEnabled(state, 0);
+      setEnabled(state, 1);
       setUpdateTimeNow(state);
       setIp(state, "127.0.0.1");
       setResult(state, "good");
@@ -100,13 +100,8 @@ int main(int argc, char* argv[])
       saveState(state, getStateFilename(config));
    }
 
-    if (state) {
-        deleteState(state);
-    }
-
-    if (config) {
-        deleteConfig(config);
-    }
+   deleteState(state);
+   deleteConfig(config);
 
     return 0;
 }
