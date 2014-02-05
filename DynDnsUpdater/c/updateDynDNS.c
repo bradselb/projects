@@ -10,7 +10,8 @@
 
 // update this with major revisions. 
 // req'd format is: "Company-model-version"
-static const char* g_UserAgent = "Self-Brad's embedded DynDNS Updater-v0.7";
+static const char* USER_AGENT = "Self-Brad's embedded DynDNS Updater-v0.7";
+static const char* DEFAULT_CONFIG_FILE_PATH = "/var/tmp/DynDnsUpdaterConfig.dat";
 
 
 // --------------------------------------------------------------------------
@@ -27,7 +28,14 @@ int main(int argc, char* argv[])
    memset(reply, 0, sizeof reply);
    memset(currentIp, 0, sizeof currentIp);
 
-   config = createDefaultConfig();
+
+   config = loadConfig(DEFAULT_CONFIG_FILE_PATH);
+   if (!config) {
+      fprintf(stderr, "Config File does not exist\n");
+      fprintf(stderr, "creating a default config\n");
+      config = createDefaultConfig();
+      saveConfig(config, DEFAULT_CONFIG_FILE_PATH);
+   }
 
    if (!config) {
       fprintf(stderr, "failed to allocate Config object\n");
@@ -51,7 +59,7 @@ int main(int argc, char* argv[])
       fprintf(stderr, "result of previous update was '%s', not 'good'\n", getPrevResult(state));
    } 
 //int getURL(char* buf, int bufsize, const char* url, const char* userAgent, const char* user, const char* pass );
-   else if ( 0 != (rc = getURL(reply, replySize, getDetectURL(config), g_UserAgent, 0, 0)) ) {
+   else if ( 0 != (rc = getURL(reply, replySize, getDetectURL(config), USER_AGENT, 0, 0)) ) {
       fprintf(stderr, "getURL(%s) returned: %d\n", getDetectURL(config), rc);
    }
    else if ( 0 != (rc = extractIpAddress(reply, currentIp, sizeof currentIp / sizeof currentIp[0])) ) {
@@ -78,7 +86,7 @@ int main(int argc, char* argv[])
 
       // send the updated ip address to  DynDNS.org
       memset(reply, 0, sizeof reply);
-      rc = getURL(reply, replySize, urlbuf, g_UserAgent, getUsername(config), getPassword(config));
+      rc = getURL(reply, replySize, urlbuf, USER_AGENT, getUsername(config), getPassword(config));
       free(urlbuf);
       urlbuf = 0;
 
