@@ -11,9 +11,11 @@ LDFLAGS += -L$(BRAD_LIBDIR)
 
 all : $(EXE)
 
+lib :
+	make -C $(BRAD_LIBDIR) $<
+
 $(EXE) : $(OBJS)
 	$(CC)  $(LDFLAGS) -o $@ $(OBJS) -lcurl -lrt -lbrad
-
 
 %.o : %.c
 	$(CC) -c $(CPPFLAGS) $(CFLAGS) $< -o $@
