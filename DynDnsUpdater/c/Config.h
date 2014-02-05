@@ -15,8 +15,8 @@
 
 struct Config;
 
-// loadConfig(), readConfig() and createDefaultConfig() all allocate a new
-// config object - which MUST be deleted by deleteConfig().
+// loadConfig(), readConfig() and createDefaultConfig() all allocate
+//  a new config object - which MUST be deleted by deleteConfig().
 void deleteConfig(struct Config*);
 
 // can load the config from a file
@@ -26,10 +26,11 @@ struct Config* loadConfig(const char* filename);
 // returns zero if successful, non zero otherwise.
 int saveConfig(const struct Config*, const char* filename);
 
-// low level functions to deal with persitent config
-// similar to load and save above.
+// low level functions to deal with persitent config similar to load and save above.
 struct Config* readConfig(int fd);
-//int writeConfig(const struct Config*, int fd);// not yet implemented. 
+
+// returns number of bytes written on success less than zero otherwise.
+int writeConfig(const struct Config*, int fd);
 
 // only need to do this if there is no previously saved config 
 // returns NULL if there was an error.

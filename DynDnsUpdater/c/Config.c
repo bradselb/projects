@@ -101,8 +101,7 @@ struct Config* loadConfig(const char* filename)
         // do nothing.
     } else if ((fd = open(filename, O_RDONLY)) < 0) {
         // file open failed.
-        fprintf(stderr, "(%s:%d) %s() failed to open file '%s'\n", __FILE__,__LINE__,__FUNCTION__,filename);
-        perror(0);
+        fprintf(stderr, "'%s' - %s\n", filename, strerror(errno));
     } else {
         config = readConfig(fd);
         close(fd);
@@ -117,7 +116,7 @@ int saveConfig(const struct Config* config, const char* filename)
    int rc = -1;
    FILE* file = 0;
 
-   if ( !config ) {
+   if ( !config || !filename ) {
       rc = -1;
    }
    else if ( 0 == (file = fopen(filename, "w")) ) {
@@ -192,7 +191,7 @@ struct Config* readConfig(int fd)
     bufsize = MAX_BUF_SIZE;
     buf = malloc(bufsize);
     if (!buf) {
-        goto out_free_buf;
+        goto out_final;
     }
 
     memset(buf, 0, bufsize);
@@ -304,9 +303,70 @@ out_final:
 
 
 // --------------------------------------------------------------------------
+// returns number of bytes written on success less than zero otherwise.
 int writeConfig(const struct Config* config, int fd)
 {
-    int rc = -1;
+    int rc;
+    int byte_count;
+    int bufsize;
+    char* buf;
+
+    buf = 0;
+
+    if (!config) {
+        rc = -1;
+        goto out_final;
+    }
+
+    bufsize = MAX_BUF_SIZE; // output should NEVER be truncated.
+    buf = malloc(bufsize);
+    if (!buf) {
+        rc = -2;
+        goto out_final;
+    }
+    memset(buf, 0, bufsize);
+
+
+    // the compiler will catenate all these adjacent strings into one long string.
+    byte_count = snprintf(buf, bufsize,
+                          "period %d\n"
+                          "State-Filename %s\n"
+                          "Detect-URL %s\n"
+                          "Update-URL %s\n"
+                          "Hostname %s\n"
+                          "Username %s\n"
+                          "Password %s\n",
+                          config->period,
+                          config->stateFilename,
+                          config->detectURL,
+                          config->updateURL,
+                          config->hostname,
+                          config->username,
+                          config->password
+                         );
+
+    if ((byte_count < 0) || (!(byte_count<bufsize))) {
+        // an error or the output was truncated.
+        rc = -3;
+        goto out_free_buf;
+    } 
+    
+    rc = write(fd, buf, byte_count+1);
+    if (rc < 0) {
+        // write failed.
+        fprintf(stderr, "(%s:%d) %s() - %s\n", __FILE__, __LINE__, __FUNCTION__, strerror(errno));
+        goto out_free_buf;
+    }
+
+
+
+out_free_buf:
+    if (buf) {
+        memset(buf, 0, bufsize);
+        free(buf);
+    }
+
+out_final:
     return rc;
 }
 
