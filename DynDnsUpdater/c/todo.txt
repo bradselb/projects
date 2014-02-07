@@ -1,6 +1,8 @@
 - accept command line args
   * config file path
   * version
+  * log file 
+  * pid file
   * override config file params
 
 - Complete the Config object
@@ -10,13 +12,15 @@
 
 - unit tests
    Config - done.
-   State 
+   State
+   extractIpAddress()
+   getURL()
+   timeHelpers
 
-- read config file from disk instead of always using the default config. 
+- read config file from disk instead of always using the default config.
+  (this is working now but, could definitely be improved).
 
-- revisit State.c with an eye toward following Config.c approach
-- fix / improve security of Config file? 
-- fix / improve current IP addr discovery
+- fix / improve current IP addr discovery (not sure what I had in mind here).
 - improve ip address extraction. 
 - standardize on new & delete instead of create & destroy.
 - be const correct. 
@@ -29,3 +33,5 @@
 
 ideas for new features: 
 - use sqlite database to keep track of update history.
+- consider removing dependency upon libcurl.
+  --> re-write getURL or add a more general http client object to lib.
