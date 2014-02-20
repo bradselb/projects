@@ -25,6 +25,12 @@ const char* slist_string(struct slist* node);
 struct slist* slist_next(struct slist* node);
 struct slist* slist_prev(struct slist* node);
 
+// calculate both the number of strings in the list and the cummulative 
+// string length of all of the strings. 
+// returns non-zero on failure and returns zero on success. 
+int slist_size(struct slist* head, unsigned int* count, unsigned int* length);
+
+
 // for each string in the list, call the function and pass some
 // context object and the string as the arguments to the function.
 int slist_foreach(struct slist* head, int (*fctn)(void* ctx, const char* cs), void* ctx);
