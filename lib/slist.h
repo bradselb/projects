@@ -23,10 +23,17 @@ const char* slist_string(struct slist* node);
 
 // iterate over the the list.
 struct slist* slist_next(struct slist* node);
+struct slist* slist_prev(struct slist* node);
 
-// call the function for each element in the list, passing the 
-// string contained at each node as the argument to the function.
-int slist_foreach(struct slist* head, int (*fctn)(const char*));
+// for each string in the list, call the function and pass some
+// context object and the string as the arguments to the function.
+int slist_foreach(struct slist* head, int (*fctn)(void* ctx, const char* cs), void* ctx);
+
+
+// split the delimited string into a list of strings.
+// add the strings to the end of the list.
+// return the number of strings added to the list.
+int slist_split(struct slist* head, const char* cs, const char* delims);
 
 
 #endif //!defined(STRINGLIST_H)

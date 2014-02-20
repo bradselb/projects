@@ -142,7 +142,7 @@ int slist_pop_back(struct slist* head)
 
 
 // -------------------------------------------------------------------------
-int slist_foreach(struct slist* head, int (*fctn)(const char*))
+int slist_foreach(struct slist* head, int (*fctn)(void* , const char*), void* ctx)
 {
 	int rc = 0;
 	struct slist* node = 0;
@@ -156,7 +156,7 @@ int slist_foreach(struct slist* head, int (*fctn)(const char*))
 	} else {
 		node = head->next;
 		while (node != head) {
-			fctn(node->s);
+			fctn(ctx, node->s);
 			node = node->next;
 		}
 	}
@@ -179,6 +179,7 @@ struct slist* slist_next(struct slist* node)
 	return next;
 }
 
+// -------------------------------------------------------------------------
 struct slist* slist_prev(struct slist* node)
 {
 	struct slist* prev = 0;
@@ -186,3 +187,38 @@ struct slist* slist_prev(struct slist* node)
 	return prev;
 }
 
+
+// -------------------------------------------------------------------------
+int slist_split(struct slist* list, const char* cs, const char* delims)
+{
+    int n;
+    char* s;
+    char* p;
+    char* token;
+
+    n = 0; s = 0; p = 0; token = 0;
+
+    // we need a list object.
+    if (!list) goto out;
+
+    // copy the given string to my own buffer. 
+    s = malloc(strlen(cs) + 1);
+    if (!s) goto out;
+    strcpy(s, cs);
+
+    // use strtok to tokenize the string
+    token = strtok_r(s, delims, &p);
+    if(token) {
+        slist_push_back(list, token);
+    }
+    while (0 != (token = strtok_r(0, delims, &p))) {
+        slist_push_back(list, token);
+    }
+
+out:
+    if (s) {
+        free(s);
+    }
+
+    return n;
+}
