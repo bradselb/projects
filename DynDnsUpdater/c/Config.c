@@ -1,5 +1,5 @@
 #include "Config.h"
-#include "tokenize.h"
+#include "slist.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -173,29 +173,49 @@ static int is_file_size_less_than(int fd, ssize_t size)
 struct Config* readConfig(int fd)
 {
     struct Config* config = 0;
-    char* buf = 0;
+
+    struct slist* head = 0; // a string list.
+    struct slist* node; // a node in the list.
+
+    char* buf = 0; // a read buffer
     size_t bufsize; // allocated size
+
     ssize_t bytes_read; // how many bytes read this time
     size_t length; // how many bytes are in the bufffer
 
-    char* tokbuf;
-    size_t tokbufsize;
-    int tokcount;
-    //int err;
 
     if (!is_file_size_less_than(fd, MAX_BUF_SIZE)) {
         // file too big.
-        goto out_final;
+        goto out;
     }
 
-    // create a read buffer
+    // ------------------------------------------------
+    // allocate some stuff. 
+
+    // allocate a list of strings
+    head = slist_alloc();
+    if (!head) {
+        goto out;
+    }
+
+    // allocate a read buffer
     bufsize = MAX_BUF_SIZE;
     buf = malloc(bufsize);
     if (!buf) {
-        goto out_final;
+        goto out;
     }
-
     memset(buf, 0, bufsize);
+
+    // allocate the config object that this fctn constructs
+    config = malloc(sizeof(struct Config));
+    if (!config) {
+        goto out;
+    }
+    memset(config, 0, sizeof(struct Config));
+
+
+    // ------------------------------------------------
+    // with the preliminaries out of the way, it's time to do the work.
 
     // read the whole file into the read buffer.
     length = 0;
@@ -203,105 +223,81 @@ struct Config* readConfig(int fd)
         length += bytes_read;
     }
 
-    //TODO: Use string list instead of tokenize.
-    // despite it's elaitive thrift in memory usage, the tokenize thing is
-    // kinda hideous in actual use. Replace this garbage with slist.
-    tokcount = tokenize(buf, bufsize, " \t\n", &tokbufsize);
-    tokbuf = buf; // sugar. 
+    // split the content read from the file into a list of individual words
+    slist_split(head, buf, " \t\n");
 
-    // create an array of pointers to the individual tokens in the buffer.
-    size_t argvsize = (tokcount + 1) * sizeof(char*);
-    char** argv = malloc(argvsize);
-    if (!argv) {
-        goto out_free_buf;
-    }
-    memset(argv, 0, argvsize);
-
-
-    int argc = init_argv_from_tokenbuf(argv, tokbuf, tokbufsize, tokcount);
-    if (argc != tokcount) {
-        // failed to extract argv?
-        goto out_free_argv;
-    }
-
-
-    // allocate a config object.
-    config = malloc(sizeof(struct Config));
-    if (!config) {
-        goto out_free_argv;
-    }
-    memset(config, 0, sizeof(struct Config));
-
-
-
-    // iterate over the tokens and pick off key-value pairs
-
-    char** token;
-    token = argv;
-    while (token && *token) {
-        if (0 == strncmp(*token, "period", 5)) {
-            ++token;
-            if (token && *token) {
-                int period = strtol(*token, 0, 0);
+    // iterate over the list of words read from the file and pick off key-value pairs
+    node =  slist_next(head);
+    while (node != head){
+        const char* token;
+        token = slist_string(node);
+        if (0 == strncmp(token, "period", 5)) {
+            node = slist_next(node);
+            token = slist_string(node);
+            if (token) {
+                int period = strtol(token, 0, 0);
                 setPeriod(config, period);
-                ++token;
+                node = slist_next(node);
             }
-        } else if (0 == strncmp(*token, "State", 5)) {
-            ++token;
-            if (token && *token) {
-                setStateFilename(config, *token);
-                ++token;
+        } else if (0 == strncmp(token, "State", 5)) {
+            node = slist_next(node);
+            token = slist_string(node);
+            if (token) {
+                setStateFilename(config, token);
+                node = slist_next(node);
             }
-        } else if (0 == strncmp(*token, "Detect", 5)) {
-            ++token;
-            if (token && *token) {
-                setDetectURL(config, *token);
-                ++token;
+        } else if (0 == strncmp(token, "Detect", 5)) {
+            node = slist_next(node);
+            token = slist_string(node);
+            if (token) {
+                setDetectURL(config, token);
+                node = slist_next(node);
             }
-        } else if (0 == strncmp(*token, "Update", 5)) {
-            ++token;
-            if (token && *token) {
-                setUpdateURL(config, *token);
-                ++token;
+        } else if (0 == strncmp(token, "Update", 5)) {
+            node = slist_next(node);
+            token = slist_string(node);
+            if (token) {
+                setUpdateURL(config, token);
+                node = slist_next(node);
             }
-        } else if (0 == strncmp(*token, "Hostname", 5)) {
-            ++token;
-            if (token && *token) {
-                setHostname(config, *token);
-                ++token;
+        } else if (0 == strncmp(token, "Hostname", 5)) {
+            node = slist_next(node);
+            token = slist_string(node);
+            if (token) {
+                setHostname(config, token);
+                node = slist_next(node);
             }
-        } else if (0 == strncmp(*token, "Username", 5)) {
-            ++token;
-            if (token && *token) {
-                setUsername(config, *token);
-                ++token;
+        } else if (0 == strncmp(token, "Username", 5)) {
+            node = slist_next(node);
+            token = slist_string(node);
+            if (token) {
+                setUsername(config, token);
+                node = slist_next(node);
             }
-        } else if (0 == strncmp(*token, "Password", 5)) {
-            ++token;
-            if (token && *token) {
-                setPassword(config, *token);
-                ++token;
+        } else if (0 == strncmp(token, "Password", 5)) {
+            node = slist_next(node);
+            token = slist_string(node);
+            if (token) {
+                setPassword(config, token);
+                node = slist_next(node);
             }        
         } else {
-            // unrecognized key word. garbage?
-            ++token;
+            // ignore unrecognized key word.
+            node = slist_next(node);
         }
     } // while 
 
 
-out_free_argv:
-    if (argv) {
-        memset(argv, 0, argvsize);
-        free(argv);
-    }
-
-out_free_buf:
+out:
     if (buf) {
         memset(buf, 0, bufsize);
         free(buf);
     }
 
-out_final:
+    if (head) {
+        slist_free(head);
+    }
+
     return config;
 }
 
