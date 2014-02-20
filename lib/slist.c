@@ -210,6 +210,20 @@ int slist_size(struct slist* head, unsigned int* count, unsigned int* length)
 }
 
 // -------------------------------------------------------------------------
+int slist_is_not_empty(struct slist* head)
+{
+    int is_not_empty;
+    is_not_empty = (head && head != head->next);
+    return is_not_empty;
+}
+
+// -------------------------------------------------------------------------
+int slist_is_empty(struct slist* head)
+{
+    return !(slist_is_not_empty(head));
+}
+
+// -------------------------------------------------------------------------
 int slist_split(struct slist* list, const char* cs, const char* delims)
 {
     int n;

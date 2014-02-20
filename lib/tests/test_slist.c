@@ -4,6 +4,7 @@
 #include <string.h> 
 #include <stdlib.h> 
 
+// -------------------------------------------------------------------------
 int print(void* ctx, const char* cs)
 {
     printf("%s\n", cs);
@@ -11,6 +12,7 @@ int print(void* ctx, const char* cs)
 }
 
 
+// -------------------------------------------------------------------------
 int main(int argc, char** argv)
 {
     int rc = 0;
@@ -21,14 +23,20 @@ int main(int argc, char** argv)
         fprintf(stderr, "failed to allocate stringlist\n");
         goto end;
     }
-/*
 
     slist_push_back(head, "first");
     slist_push_back(head, "second");
     slist_push_back(head, "third");
 
     slist_foreach(head, print, 0);
-*/
+
+    while (slist_is_not_empty(head)) {
+        slist_pop_front(head);
+    }
+
+    // should be able to iterate over an empty list...
+    slist_foreach(head, print, 0);
+
     slist_split(head, "this is a short list of strings", " ");
     slist_foreach(head, print, 0);
 

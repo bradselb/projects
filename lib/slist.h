@@ -6,6 +6,7 @@ struct slist;
 
 // allocate the head node of the list. call push function to add nodes.
 struct slist* slist_alloc();
+
 // free the entire list - including all of the strings.
 // failure to call  this function results in memory leaks!
 void slist_free(struct slist* head);
@@ -25,16 +26,20 @@ const char* slist_string(struct slist* node);
 struct slist* slist_next(struct slist* node);
 struct slist* slist_prev(struct slist* node);
 
-// calculate both the number of strings in the list and the cummulative 
-// string length of all of the strings. 
+// calculate both the number of strings in the list and
+// the cummulative string length of all of the strings. 
 // returns non-zero on failure and returns zero on success. 
 int slist_size(struct slist* head, unsigned int* count, unsigned int* length);
 
+// returns true (non-zero) if there is at least one item in the list.
+int slist_is_not_empty(struct slist* head);
+
+// returns true (non-zero) if the list is empty.
+int slist_is_empty(struct slist* head);
 
 // for each string in the list, call the function and pass some
 // context object and the string as the arguments to the function.
 int slist_foreach(struct slist* head, int (*fctn)(void* ctx, const char* cs), void* ctx);
-
 
 // split the delimited string into a list of strings.
 // add the strings to the end of the list.
