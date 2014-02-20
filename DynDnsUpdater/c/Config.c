@@ -156,79 +156,27 @@ static int is_file_size_less_than(int fd, ssize_t size)
 }
 
 
+
 // --------------------------------------------------------------------------
-// expectations: 
-//  1) the file descriptor is associated with a valid open plain text file
-//  2) the content of the file is roughly conformat to that which is written 
-//     by the function saveConfig() above. That is, each line contains a simple 
-//     key-value pair delimited by whitespace only (implies whitespace not 
-//     allowed in either the key string nor in the value. 
-//  3) key-value pairs may be arranged in any order.
-//  4) whole file fits in one buffer...rethink this.
-//
-// plan: 
-// read the whole file in at once.
-// tokenize the buffer and extract argv and argc
-// iterate over the argv and compare each key
-struct Config* readConfig(int fd)
+// split the content read from the file into a list of individual words
+// iterate over the list of words read from the file and pick off key-value pairs
+static int parse_config_buf(struct Config* config, const char* buf)
 {
-    struct Config* config = 0;
-
+    int rc = 0;
     struct slist* head = 0; // a string list.
-    struct slist* node; // a node in the list.
 
-    char* buf = 0; // a read buffer
-    size_t bufsize; // allocated size
-
-    ssize_t bytes_read; // how many bytes read this time
-    size_t length; // how many bytes are in the bufffer
-
-
-    if (!is_file_size_less_than(fd, MAX_BUF_SIZE)) {
-        // file too big.
-        goto out;
-    }
-
-    // ------------------------------------------------
-    // allocate some stuff. 
-
-    // allocate a list of strings
     head = slist_alloc();
     if (!head) {
+        rc = -1;
         goto out;
     }
 
-    // allocate a read buffer
-    bufsize = MAX_BUF_SIZE;
-    buf = malloc(bufsize);
-    if (!buf) {
-        goto out;
-    }
-    memset(buf, 0, bufsize);
+    int count;
+    count = slist_split(head, buf, " \t\n");
 
-    // allocate the config object that this fctn constructs
-    config = malloc(sizeof(struct Config));
-    if (!config) {
-        goto out;
-    }
-    memset(config, 0, sizeof(struct Config));
-
-
-    // ------------------------------------------------
-    // with the preliminaries out of the way, it's time to do the work.
-
-    // read the whole file into the read buffer.
-    length = 0;
-    while(length < bufsize && 0 < (bytes_read = read(fd, (buf+length), (bufsize-length)-1))) {
-        length += bytes_read;
-    }
-
-    // split the content read from the file into a list of individual words
-    slist_split(head, buf, " \t\n");
-
-    // iterate over the list of words read from the file and pick off key-value pairs
+    struct slist* node; // a node in the list.
     node =  slist_next(head);
-    while (node != head){
+    while (node != head) {
         const char* token;
         token = slist_string(node);
         if (0 == strncmp(token, "period", 5)) {
@@ -287,15 +235,73 @@ struct Config* readConfig(int fd)
         }
     } // while 
 
+out:
+    slist_free(head);
+
+    return rc;
+}
+
+
+
+
+// --------------------------------------------------------------------------
+// expectations: 
+//  1) the file descriptor is associated with a valid open plain text file
+//  2) the content of the file is roughly conformat to that which is written 
+//     by the function saveConfig() above. That is, each line contains a simple 
+//     key-value pair delimited by whitespace only (implies whitespace not 
+//     allowed in either the key string nor in the value. 
+//  3) key-value pairs may be arranged in any order.
+//  4) whole file fits in one buffer...rethink this.
+//
+// plan: 
+// read the whole file in at once.
+// tokenize the buffer and extract argv and argc
+// iterate over the argv and compare each key
+struct Config* readConfig(int fd)
+{
+    struct Config* config = 0;
+    char* buf = 0; // a read buffer
+    size_t bufsize; // allocated size
+
+    // allocate a read buffer
+    bufsize = MAX_BUF_SIZE;
+    buf = malloc(bufsize);
+    if (!buf) {
+        goto out;
+    }
+    memset(buf, 0, bufsize);
+
+    // read the whole file into the read buffer.
+    // size_t fd_read(int fd, void* buf, size_t bufsize) // returns length.
+    {
+    ssize_t bytes_read; // how many bytes read this time
+    size_t length; // how many bytes are in the bufffer
+    length = 0;
+    while(length < bufsize && 0 < (bytes_read = read(fd, (buf+length), (bufsize-length)-1))) {
+        length += bytes_read;
+    }
+    }
+
+    // allocate the config object that this fctn constructs
+    config = malloc(sizeof(struct Config));
+    if (!config) {
+        goto out;
+    }
+    memset(config, 0, sizeof(struct Config));
+
+    // initialize the config object from the buffer contents.
+    int ec;
+    ec = parse_config_buf(config, buf);
+    if (ec) {
+        free(config);
+        config = 0;
+    }
 
 out:
     if (buf) {
         memset(buf, 0, bufsize);
         free(buf);
-    }
-
-    if (head) {
-        slist_free(head);
     }
 
     return config;
