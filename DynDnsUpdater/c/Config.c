@@ -188,6 +188,7 @@ struct Config* readConfig(int fd)
         goto out_final;
     }
 
+    // create a read buffer
     bufsize = MAX_BUF_SIZE;
     buf = malloc(bufsize);
     if (!buf) {
@@ -202,6 +203,9 @@ struct Config* readConfig(int fd)
         length += bytes_read;
     }
 
+    //TODO: Use string list instead of tokenize.
+    // despite it's elaitive thrift in memory usage, the tokenize thing is
+    // kinda hideous in actual use. Replace this garbage with slist.
     tokcount = tokenize(buf, bufsize, " \t\n", &tokbufsize);
     tokbuf = buf; // sugar. 
 

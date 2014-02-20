@@ -187,6 +187,27 @@ struct slist* slist_prev(struct slist* node)
 	return prev;
 }
 
+// -------------------------------------------------------------------------
+int slist_size(struct slist* head, unsigned int* count, unsigned int* length)
+{
+    int rc;
+
+    rc = -1;
+    if (head) {
+        unsigned int cnt = 0;
+        unsigned int len = 0;
+        struct slist* node = head;
+        while (head != (node = slist_next(node))) {
+            cnt += 1;
+            len += strlen(slist_string(node));
+        }
+        if (count) *count = cnt;
+        if (length) *length = len;
+        rc = 0;
+    }
+
+    return rc;
+}
 
 // -------------------------------------------------------------------------
 int slist_split(struct slist* list, const char* cs, const char* delims)
@@ -200,6 +221,10 @@ int slist_split(struct slist* list, const char* cs, const char* delims)
 
     // we need a list object.
     if (!list) goto out;
+
+    if (!delims) {
+        delims = " ";
+    }
 
     // copy the given string to my own buffer. 
     s = malloc(strlen(cs) + 1);
@@ -222,3 +247,44 @@ out:
 
     return n;
 }
+
+
+// -------------------------------------------------------------------------
+//
+int slist_join(struct slist* head, char** buf, const char* delim)
+{
+    int rc;
+    unsigned int count;
+    unsigned int length;
+    unsigned int bufsize;
+
+
+    if (!delim) {
+        delim = " ";
+    }
+
+    rc = slist_size(head, &count, &length);
+    if (rc != 0) {
+        goto out;
+    }
+    
+    bufsize = length + (count-1)*strlen(delim) + 1;
+
+    if (buf && (*buf = malloc(bufsize))) {
+        struct slist* node = head;
+        node = slist_next(node);
+        while (node != head) {
+            strcat(*buf, slist_string(node));
+            node = slist_next(node);
+            if (slist_string(node)) {
+                strcat(*buf, delim);
+            }
+        }
+        rc = 0; // caller MUST free the buf.
+    }
+
+out:
+    return rc;
+}
+
+

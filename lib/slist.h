@@ -35,5 +35,12 @@ int slist_foreach(struct slist* head, int (*fctn)(void* ctx, const char* cs), vo
 // return the number of strings added to the list.
 int slist_split(struct slist* head, const char* cs, const char* delims);
 
+// join the strings in the list forming one big string. 
+// each string is separated by the  delim string. 
+// on success, this function allocates a buffer from the heap
+// and returns zero. it returns non-zero on failure. 
+// the buffer allcated by the function MUST be freed by the caller!
+int slist_join(struct slist* head, char** buf, const char* delim);
+
 
 #endif //!defined(STRINGLIST_H)
