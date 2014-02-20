@@ -29,7 +29,7 @@ void* pop_front(struct list* head);
 //void* pop_back(struct list* head);
 
 void* peek_front(struct list* head);
-int foreach_item_call_fctn(struct list* head, void (*fctn)(void* item, void* ctx), void* ctx);
+int foreach_item_call_fctn(struct list* head, void (*fctn)(void* ctx, void* item), void* ctx);
 
 #endif // !defined LIST_OF_POINTERS_H
 

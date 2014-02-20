@@ -13,7 +13,7 @@
 #define RIGHT_CURLY_BRACE 0x7d
 
 // -------------------------------------------------------------------------
-void show_block(void* item, void* unused)
+void show_block(void* unused, void* item)
 {
     struct block* block = (struct block*)item;
     print_block(block);

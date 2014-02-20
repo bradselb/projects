@@ -168,7 +168,7 @@ void* peek_front(struct list* head)
 // returns the number of elements on the list. Note that teven if no
 // function is supplied, the list is always traversed and the count 
 // retuned. 
-int foreach_item_call_fctn(struct list* head, void (*fctn)(void* item, void* ctx), void* ctx)
+int foreach_item_call_fctn(struct list* head, void (*fctn)(void* ctx, void* item), void* ctx)
 {
     int count = 0;
     struct list* node;
@@ -178,7 +178,7 @@ int foreach_item_call_fctn(struct list* head, void (*fctn)(void* item, void* ctx
         while (node != head) {
             //printf("head: %p, node: %p\n", head, node);
             if (fctn) {
-                fctn(node->item, ctx);
+                fctn(ctx, node->item);
             }
             ++count;
             node = node->next;
