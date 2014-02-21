@@ -16,15 +16,17 @@
 
 struct basic_statistics
 {
-    int sum;
-    int sum_squared;
     int n;
-    int bin_count;
-    int* bin_freq;
+    double sum;
+    double sum_squared;
+    double minimum;
+    double maximum;
 };
 
 struct basic_statistics* allocate_basic_statistics(void)
 {
+    struct basic_statistics* statistics= 0;
+    return statistics;
 }
 
 void free_basic_statistics(struct basic_statistics* stats)
