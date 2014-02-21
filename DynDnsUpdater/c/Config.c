@@ -138,28 +138,10 @@ int saveConfig(const struct Config* config, const char* filename)
 
 
 // --------------------------------------------------------------------------
-static int is_file_size_less_than(int fd, ssize_t size)
-{
-    int rc = 0; // no it is not. 
-
-    int err;
-    struct stat st;
-
-    memset(&st, 0, sizeof st);
-    
-    err = fstat(fd, &st);
-    if (0 == err && st.st_size < size) {
-        // success.
-        rc = 1;
-    }
-    return rc;
-}
-
-
-
-// --------------------------------------------------------------------------
-// split the content read from the file into a list of individual words
-// iterate over the list of words read from the file and pick off key-value pairs
+// given a buffer, assume the content is  key-value word pairs. Split the
+// content in the buffer into discrete words and iterate over the list of 
+// words and pick off specific key-value pairs. Fill the supplied Config 
+// object with the values so found in the buffer contents.
 static int parse_config_buf(struct Config* config, const char* buf)
 {
     int rc = 0;
