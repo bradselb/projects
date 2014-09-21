@@ -1,18 +1,20 @@
 SHELL=/bin/bash
 
+
 TARGET=arm-linux
-PRJROOT=/home/brad/ucsc-ex/emblin/build-arm-linux/
-PREFIX=${PRJROOT}/BUILD/toolchain
-SYSROOT=${PREFIX}/${TARGET}
+# PRJROOT=${HOME}/buildroot/outpu
+PREFIX=${HOME}/buildroot/output/host/usr/
+# SYSROOT=${PREFIX}/${TARGET}
 
 CC=${PREFIX}/bin/arm-linux-gcc
-CXX=${PREFIX}/bin/arm-linux-g++
-CPPFLAGS="-I${PREFIX}/${TARGET}/include"
-CFLAGS=-mcpu=ep9312 -mfix-crunch-d1 -D__MAVERICK__
-LDFLAGS=-L${PREFIX}/${TARGET}/lib
+CFLAGS += "-I../../lib"
+#CFLAGS=-mcpu=ep9312 -mfix-crunch-d1 -D__MAVERICK__
+CFLAGS += -Wall -O2 -std=gnu99
+#LDFLAGS=-L${PREFIX}/${TARGET}/lib
 
 EXE = updateDynDNS 
-OBJS = Config.o getURL.o State.o timeHelpers.o extractIpAddress.o updateDynDNS.o
+SRCS = $(wildcard *.c) $(wildcard ../../*.c)
+OBJS = $(SRCS:%.c=%.o)
 
 all : $(EXE)
 
@@ -21,7 +23,7 @@ $(EXE) : $(OBJS)
 
 
 %.o : %.cpp
-	$(CC) -c $(CPPFLAGS) $(CFLAGS) $< -o $@
+	$(CC) -c $(CFLAGS) $<
 
 clean:
-	rm -f *.o $(EXE)
+	rm -f $(OBJS) $(EXE)
