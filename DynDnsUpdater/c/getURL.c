@@ -1,6 +1,10 @@
 #include "getURL.h" 
 
 #include <string.h> // memset(), memcpy()
+#include <stdio.h> //fprintf()
+
+
+#if !defined DO_NOT_USE_CURL_LIBRARY
 
 #define CURL_NO_OLDIES 1
 #include <curl/curl.h>
@@ -135,6 +139,16 @@ int getURL(char* buf, int bufsize, const char* url, const char* agent, const cha
 
    return rc;
 }
+
+#else  // use a stub
+int getURL(char* buf, int bufsize, const char* url, const char* agent, const char* user, const char* pass)
+{
+   int rc = -1;
+   return rc; 
+}
+
+
+#endif
 
 // --------------------------------------------------------------------------
 
