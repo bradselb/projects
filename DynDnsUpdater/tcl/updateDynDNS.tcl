@@ -25,12 +25,14 @@ set DetectIp(done) 0
 
 
 proc sendHttpGetRequest {chan host resource {auth {NONE}}} { 
+   set date [clock format [clock seconds] -format {%a, %d %m %Y %H:%M:%S GMT} -gmt 1]
    puts $chan "GET $resource HTTP/1.0"
    puts $chan "Host: $host"
    if { {NONE} != $auth } {
       puts $chan "Authorization: Basic $auth"
    }
-   puts $chan "User-agent: Self - Brad's DynDNS Update Client - v0.5 (14 Apr 2011)"
+   puts $chan "User-agent: Self - Brad's DynDNS Update Client (Tcl version) - v0.6 (08-Oct-2014)"
+   puts $chan "Date: $date"
    puts $chan "Connection: close"
    puts $chan ""
 }
@@ -66,15 +68,16 @@ proc saveState {} {
 
 proc receiveDetectIpReply {chan} {
    global DetectIp
-   if { [eof $chan] || [catch {gets $chan reply}] } {
-      close $chan
-      # set DetectIp(done) 1
+   if { [eof $chan] } {
+      set DetectIp(done) {EOF}
+   } elseif { [catch {gets $chan reply}] } {
+      set DetectIp(done) {EXCEPTION}
    } else {
-      # puts stdout "$reply" 
+      # puts stderr "$reply" 
       set matches [regexp -nocase -expanded  {([\d]+[\.][\d]+[\.][\d]+[\.][\d]+)}  $reply where addr]
       if { 0 < $matches } { 
          set DetectIp(myIp)  "$addr" 
-         set DetectIp(done) 1
+         set DetectIp(done) {OK}
       }
    }
 }
@@ -82,23 +85,29 @@ proc receiveDetectIpReply {chan} {
 proc detectIp {} {
    global DetectIp
    set sock [socket -async $DetectIp(host) $DetectIp(port)]
-   fconfigure $sock -blocking 0 -buffering line
+   fconfigure $sock -blocking 1 -buffering line
    fileevent $sock readable [list receiveDetectIpReply $sock]
    fileevent $sock writable [list sendHttpGetRequest $sock $DetectIp(host) $DetectIp(resource)]
 
-   after $DetectIp(timeout) set DetectIp(done) 1
+   after $DetectIp(timeout) [list set DetectIp(done) {TIMEOUT}]
    vwait DetectIp(done)
+   close $sock
+
+   puts stderr "detect ip: $DetectIp(done)"
+
    return "$DetectIp(myIp)"
 }
 
+
 proc receiveUpdateIpReply {chan} {
    global UpdateIp
-   if { [eof $chan] || [catch {gets $chan reply}] } {
-      close $chan
-      set UpdateIp(done) 1
+   if { [eof $chan] } {
+      set UpdateIp(done) {EOF}
+   } elseif { [catch {gets $chan reply}] } {
+      set UpdateIp(done) {EXCEPTION}
    } else {
       lappend UpdateIp(content) $reply
-      # puts stdout "$reply"
+      # puts stderr "$reply"
    }
 }
 
@@ -106,12 +115,15 @@ proc updateIp {myhostname myipaddr auth} {
    global UpdateIp
    set resource "/nic/update?hostname=$myhostname&myip=$myipaddr"
    set sock [socket -async $UpdateIp(host) $UpdateIp(port)]
-   fconfigure $sock -blocking 0 -buffering line
+   fconfigure $sock -blocking 1 -buffering line
    fileevent $sock readable [list receiveUpdateIpReply $sock]
    fileevent $sock writable [list sendHttpGetRequest $sock $UpdateIp(host) $resource $auth]
 
-   after $UpdateIp(timeout) set UpdateIp(done) 1
+   after $UpdateIp(timeout) [list set UpdateIp(done) {TIMEOUT}]
    vwait UpdateIp(done)
+   close $sock
+
+   puts stderr "update ip: $UpdateIp(done)"
 
    return [getUpdateIpResult]
 }
