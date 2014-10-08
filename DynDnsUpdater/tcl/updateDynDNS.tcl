@@ -23,9 +23,10 @@ set DetectIp(myIp) {127.0.0.1}
 set DetectIp(timeout) {10000}  ; # milliseconds
 set DetectIp(done) 0
 
+#clock format [clock seconds] -format {%a, %d %b %Y %T %Z} -gmt true 
 
 proc sendHttpGetRequest {chan host resource {auth {NONE}}} { 
-   set date [clock format [clock seconds] -format {%a, %d %m %Y %H:%M:%S GMT} -gmt 1]
+   set date [clock format [clock seconds] -format {%a, %d %b %Y %T %Z} -gmt 1]
    puts $chan "GET $resource HTTP/1.0"
    puts $chan "Host: $host"
    if { {NONE} != $auth } {
