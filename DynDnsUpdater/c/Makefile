@@ -1,21 +1,24 @@
 SHELL=/bin/bash
 
 EXE = updateDynDNS
-SRCS = $(wildcard *.c)
+ALL_SRCS = $(wildcard *.c) $(wildcard ../../lib/*.c)
+EXCLUDE_SRCS=getURL.c
+SRCS = $(filter-out $(EXCLUDE_SRCS), $(ALL_SRCS))
 OBJS = $(SRCS:%.c=%.o)
 
-BRAD_LIBDIR = ../../lib
+MY_LIB=brad
+MY_LIBDIR = ../../lib
 
-CFLAGS += -Wall -O2 -std=gnu99 -I$(BRAD_LIBDIR)
-LDFLAGS += -L$(BRAD_LIBDIR)
+CFLAGS += -Wall -O2 -std=gnu99 -I$(MY_LIBDIR)
+LDFLAGS += -L$(MY_LIBDIR)
 
 all : $(EXE)
 
 lib :
-	make -C $(BRAD_LIBDIR) $<
+	make -C $(MY_LIBDIR) $<
 
 $(EXE) : $(OBJS)
-	$(CC)  $(LDFLAGS) -o $@ $(OBJS) -lcurl -lrt -lbrad
+	$(CC)  $(LDFLAGS) -o $@ $(OBJS) -l$(MY_LIB)
 
 %.o : %.c
 	$(CC) -c $(CPPFLAGS) $(CFLAGS) $< -o $@
