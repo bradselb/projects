@@ -5,10 +5,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <errno.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
 #include <arpa/inet.h>
+#include <poll.h>
 
 #include "inet.h"
 
@@ -97,6 +99,109 @@ int inet_connect(const char* name, const char* port, int type)
 
 out:
     return sock;
+}
+
+
+// --------------------------------------------------------------------------
+// wait for socket to be ready for write and then write the whole buffer to
+// the socket. May need to revisit this if the whole buffer is not going out
+// at one. Might need to do the write in a loop.
+// On success, this function returns the number of bytes written. On failure,
+// the function returns -1 and errno is set appropriately (hmmm,maybe?) 
+ssize_t inet_send(int sockfd, const void* buf, size_t bytes_to_send, int timeout)
+{
+    ssize_t total_bytes_sent;
+    ssize_t bytes_sent;
+    const char* p = (const char*)buf; // where are we in the buffer?
+    //const char* end = (const char*)(buf + bytes_to_send);
+    struct pollfd ps;
+    int pollrc;
+
+    ps.fd = sockfd;
+    ps.events = POLLOUT;
+    ps.revents = 0;
+
+    total_bytes_sent = 0;
+    while (total_bytes_sent < bytes_to_send) {
+
+        pollrc = poll(&ps, 1, timeout);
+
+        if (pollrc > 0) {
+            // ready for write! 
+            bytes_sent = write(sockfd, p+total_bytes_sent, bytes_to_send-total_bytes_sent);
+
+            if (bytes_sent > 0) {
+                total_bytes_sent += bytes_sent;
+            } else if (0 == bytes_sent) {
+                // try again?
+                fprintf(stderr, "(%s:%d) %s(), write() returned zero.\n", __FILE__, __LINE__, __FUNCTION__);
+                continue;
+            } else { // if bytes_sent < 0
+                // an error during write?
+                fprintf(stderr, "(%s:%d) %s(), write() returned: %ld [%s]\n", __FILE__, __LINE__, __FUNCTION__ , bytes_sent, strerror(errno));
+                break;
+            }
+
+        } else if (0 == pollrc) {
+            // timedout
+            fprintf(stderr, "(%s:%d) %s(), poll() timeout [%s]\n", __FILE__, __LINE__, __FUNCTION__ , strerror(errno));
+            break;
+        } else {
+            // a polling error.
+            fprintf(stderr, "(%s:%d) %s(), poll() returned: %d [%s]\n", __FILE__, __LINE__, __FUNCTION__ , pollrc, strerror(errno));
+            break;
+        }
+    }
+
+    
+    return total_bytes_sent;
+}
+
+
+// --------------------------------------------------------------------------
+// waits up to timout milliseconds for the socket to be readable and reads
+// upto bufsize bytes into the user supplied buffer. 
+// On success, this function returns the number of bytes written. On failure,
+// the function returns -1 and errno is set appropriately (hmmm,maybe?) 
+ssize_t inet_wait_reply(int sockfd, void* buf, size_t bufsize, int timeout)
+{
+    ssize_t total_bytes_read;
+    struct pollfd ps;
+    int done;
+
+    ps.fd = sockfd;
+    ps.events = POLLIN;
+    ps.revents = 0;
+    
+    done = 0;
+    total_bytes_read = 0;
+    while (!done) {
+        int pollrc;
+
+        // see if the server has replied.
+        pollrc = poll(&ps, 1, timeout);
+
+        if (pollrc > 0) {
+            // ready!
+            total_bytes_read += read(sockfd, buf, bufsize);
+            // not really sure how this is going to work yet. 
+            // just bail out of the loop now and hope we get everything.
+            done = 1; 
+
+        } else if (0 == pollrc) {
+            // timedout.
+            fprintf(stderr, "(%s:%d) %s(), poll() timeout [%s]\n", __FILE__, __LINE__, __FUNCTION__ , strerror(errno));
+            break;
+
+        } else if (pollrc < 0) {
+            // an error.
+            fprintf(stderr, "(%s:%d) %s(), poll() returned: %d [%s]\n", __FILE__, __LINE__, __FUNCTION__ , pollrc, strerror(errno));
+            total_bytes_read = pollrc;
+            break;
+        }
+    }
+
+    return total_bytes_read;
 }
 
 
