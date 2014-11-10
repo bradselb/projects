@@ -7,10 +7,11 @@ set Version {v0.9 (09-Nov-2014)}
 
 
 # this stuff should come from a config file
-set DetectIp(url) {http://checkip.dyndns.org:8245}
-set DetectIp(timeout) 10000
-set UpdateIp(url) {http://members.dyndns.org:8245/nic/update/}
-set UpdateIp(timeout) 10000
+set Config(detect_url) {http://checkip.dyndns.org:8245}
+set Config(update_url) {http://members.dyndns.org:8245/nic/update/}
+set Config(timeout) 10000
+#set Config(statefile) [file join / var run UpdateDynDNS_state.dat]
+set Config(statefile) [file join [pwd] UpdateDynDNS_state.dat]
 
 # this stuff comes from the state file
 set PrevState(timestamp) [clock seconds] ; # default to now.
@@ -93,22 +94,21 @@ proc updateIp {url timeout user passwd hostname myip} {
 
 
 
-proc updateDynDNS {statefile username password hostname} {
-    global UpdateIp
-    global DetectIp
+proc updateDynDNS {username password hostname} {
+    global Config
     global PrevState
 
     puts stdout "----------------------------------------------------------------------------"
     set timestamp [clock format [clock seconds] -format {%d-%b-%Y %H:%M:%S}]
     puts stdout "$timestamp"
 
-    loadState $statefile
+    loadState $Config(statefile)
 
     set prevIp "$PrevState(myIp)"
     set myIp {127.0.0.1}
 
     if {[string match -nocase {good} $PrevState(status)]} {
-        if {[catch {detectIp $DetectIp(url) $DetectIp(timeout)} result]} {
+        if {[catch {detectIp $Config(detect_url) $Config(timeout)} result]} {
             puts stderr "FAIL: detectIp $result"
         } else {
             set myIp "$result"
@@ -119,22 +119,21 @@ proc updateDynDNS {statefile username password hostname} {
     puts stdout "current  ip addr: $myIp"
 
     if { $myIp != $prevIp && $myIp != {127.0.0.1} } {
-        if {[catch {updateIp $UpdateIp(url) $UpdateIp(timeout) $username $password $hostname $myIp} result]} {
+        if {[catch {updateIp $Config(update_url) $Config(timeout) $username $password $hostname $myIp} result]} {
             puts stderr "FAIL: updateIp $result"
         } else {
             puts stdout "$result"
-            saveState $statefile $result
+            saveState $Config(statefile) $result
         }
     }
 }
 
 
-# this things should come from command line args.
-#set statefile [file join / var run UpdateDynDNS_state.dat]
-set statefile [file join [pwd] UpdateDynDNS_state.dat]
+# this things could come from command line args.
+#set configfile [file join [pwd] UpdateDynDNS_config.dat]
 set username {test}
 set password {test}
 set hostname {test.dyndns.org}
 
-updateDynDNS $statefile $username $password $hostname
+updateDynDNS $username $password $hostname
 
