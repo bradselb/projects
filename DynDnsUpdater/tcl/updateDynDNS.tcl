@@ -11,17 +11,16 @@ set DetectIp(url) {http://checkip.dyndns.org:8245}
 set DetectIp(timeout) 10000
 set UpdateIp(url) {http://members.dyndns.org:8245/nic/update/}
 set UpdateIp(timeout) 10000
-#set UpdateIp(statefile) [file join / var run UpdateDynDNS_state.dat]
-set UpdateIp(statefile) [file join [pwd] UpdateDynDNS_state.dat]
 
 # this stuff comes from the state file
 set PrevState(timestamp) [clock seconds] ; # default to now.
 set PrevState(myIp) 127.0.0.1
-set UpdateIp(prev_status) none
+set PrevState(status) none
+
 
 proc loadState {path} {
-    global UpdateIp
-    if { [catch {open $path "r"} f] } {
+    global PrevState
+    if {[catch {open $path "r"} f]} {
         puts stdout "failed to open state file for read"
     } else {
         if { ![eof $f] && ![catch {gets $f line}] } {
@@ -29,27 +28,23 @@ proc loadState {path} {
         }
         if { ![eof $f] && ![catch {gets $f line}] } {
             set result [split $line]
-            set UpdateIp(prev_status) [lindex $result 0]
+            set PrevState(status) [lindex $result 0]
             set PrevState(myIp) [lindex $result 1]
         }
-      close $f
-   }
+        close $f
+    }
 }
 
 proc saveState {path result} {
-   global UpdateIp
-   global DetectIp
-   if { [catch {open $path "w"} f] } {
-      puts stdout "failed to open state file for write"
-   } else {
-      set timestamp [clock format [clock seconds] -format {%d-%b-%Y %H:%M:%S}]
-      puts $f "$timestamp"
-      puts $f "$result"
-      close $f
-   }
+    if { [catch {open $path "w"} f] } {
+        puts stdout "failed to open state file for write"
+    } else {
+        set timestamp [clock format [clock seconds] -format {%d-%b-%Y %H:%M:%S}]
+        puts $f "$timestamp"
+        puts $f "$result"
+        close $f
+    }
 }
-
-
 
 
 proc detectIp {url timeout} {
@@ -98,27 +93,27 @@ proc updateIp {url timeout user passwd hostname myip} {
 
 
 
-proc updateDynDNS {username password hostname} {
+proc updateDynDNS {statefile username password hostname} {
     global UpdateIp
     global DetectIp
+    global PrevState
 
     puts stdout "----------------------------------------------------------------------------"
     set timestamp [clock format [clock seconds] -format {%d-%b-%Y %H:%M:%S}]
     puts stdout "$timestamp"
 
-    loadState $UpdateIp(statefile)
+    loadState $statefile
 
     set prevIp "$PrevState(myIp)"
     set myIp {127.0.0.1}
 
-    if {[string match -nocase {good} $UpdateIp(prev_status)]} {
+    if {[string match -nocase {good} $PrevState(status)]} {
         if {[catch {detectIp $DetectIp(url) $DetectIp(timeout)} result]} {
             puts stderr "FAIL: detectIp $result"
         } else {
             set myIp "$result"
         }
     }
-
 
     puts stdout "previous ip addr: $prevIp"
     puts stdout "current  ip addr: $myIp"
@@ -128,16 +123,18 @@ proc updateDynDNS {username password hostname} {
             puts stderr "FAIL: updateIp $result"
         } else {
             puts stdout "$result"
-            saveState $UpdateIp(statefile) $result
+            saveState $statefile $result
         }
     }
 }
 
 
-
+# this things should come from command line args.
+#set statefile [file join / var run UpdateDynDNS_state.dat]
+set statefile [file join [pwd] UpdateDynDNS_state.dat]
 set username {test}
 set password {test}
 set hostname {test.dyndns.org}
 
-updateDynDNS $username $password $hostname
+updateDynDNS $statefile $username $password $hostname
 
