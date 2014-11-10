@@ -3,13 +3,16 @@
 package require http
 package require base64
 
-set Version {v0.9 (09-Nov-2014)}
+set Version {v0.9.5 (10-Nov-2014)}
 
 
 # this stuff should come from a config file
 set Config(detect_url) {http://checkip.dyndns.org:8245}
 set Config(update_url) {http://members.dyndns.org:8245/nic/update/}
 set Config(timeout) 10000
+set Config(username) {test}
+set Config(password) {test}
+set Config(hostname) {test.dyndns.org}
 #set Config(statefile) [file join / var run UpdateDynDNS_state.dat]
 set Config(statefile) [file join [pwd] UpdateDynDNS_state.dat]
 
@@ -94,7 +97,7 @@ proc updateIp {url timeout user passwd hostname myip} {
 
 
 
-proc updateDynDNS {username password hostname} {
+proc updateDynDNS {} {
     global Config
     global PrevState
 
@@ -107,19 +110,18 @@ proc updateDynDNS {username password hostname} {
     set prevIp "$PrevState(myIp)"
     set myIp {127.0.0.1}
 
-    if {[string match -nocase {good} $PrevState(status)]} {
-        if {[catch {detectIp $Config(detect_url) $Config(timeout)} result]} {
-            puts stderr "FAIL: detectIp $result"
-        } else {
-            set myIp "$result"
-        }
+    if {[catch {detectIp $Config(detect_url) $Config(timeout)} result]} {
+        puts stderr "FAIL: detectIp $result"
+    } else {
+        set myIp "$result"
     }
 
     puts stdout "previous ip addr: $prevIp"
     puts stdout "current  ip addr: $myIp"
 
-    if { $myIp != $prevIp && $myIp != {127.0.0.1} } {
-        if {[catch {updateIp $Config(update_url) $Config(timeout) $username $password $hostname $myIp} result]} {
+    set good_status [string match -nocase {good} $PrevState(status)]
+    if {$good_status &&  $myIp != $prevIp && $myIp != {127.0.0.1} } {
+        if {[catch {updateIp $Config(update_url) $Config(timeout) $Config(username) $Config(password) $Config(hostname) $myIp} result]} {
             puts stderr "FAIL: updateIp $result"
         } else {
             puts stdout "$result"
@@ -129,11 +131,8 @@ proc updateDynDNS {username password hostname} {
 }
 
 
-# this things could come from command line args.
+# this could come from command line args.
 #set configfile [file join [pwd] UpdateDynDNS_config.dat]
-set username {test}
-set password {test}
-set hostname {test.dyndns.org}
 
-updateDynDNS $username $password $hostname
+updateDynDNS
 
