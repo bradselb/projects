@@ -12,7 +12,7 @@ set Config(update_url) {http://members.dyndns.org:8245/nic/update/}
 set Config(timeout) 10000
 set Config(username) {test}
 set Config(password) {test}
-set Config(hostname) {test.dyndns.org}
+set Config(hostname) {test.dyndns.org,test.ath.cx,test.homeip.net}
 #set Config(statefile) [file join / var run UpdateDynDNS_state.dat]
 set Config(statefile) [file join [pwd] UpdateDynDNS_state.dat]
 
