@@ -145,7 +145,7 @@ int http_to_string(struct HttpRequest* request, char* buf, unsigned int bufsize)
         memset(buf, 0, bufsize);
 
         size = bufsize - (length + 1);
-        count = snprintf(buf+length, size, "GET %s HTTP/1.0\r\n", request->resource);
+        count = snprintf(buf+length, size, "GET %s HTTP/1.1\r\n", request->resource);
         if (0 < count && count < size) {
             length += count;
         } else {
