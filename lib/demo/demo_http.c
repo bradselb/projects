@@ -50,7 +50,10 @@ int main(int argc, char* argv[])
     rc = http_set_basic_auth(request, "YnJhZGxleTpzZWxicmVkZQ==");
 
     rc = http_to_string(request, request_str, bufsize);
-    fprintf(stderr, "%s(), http_to_string() returned: %d\n", __FUNCTION__, rc);
+    if (rc != 0) {
+        fprintf(stderr, "%s(), http_to_string() returned: %d\n", __FUNCTION__, rc);
+        goto exit;
+    }
 
     // and reassure ourselves that it is right and proper. 
     if (verbose > 1) {
