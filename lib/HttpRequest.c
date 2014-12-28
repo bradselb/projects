@@ -226,7 +226,6 @@ static int allocate_and_copy_string(char** dst, const char* src)
         rc = 0;
     }
 
-exit:
     return rc;
 }
 
