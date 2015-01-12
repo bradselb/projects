@@ -2,7 +2,8 @@ SHELL=/bin/bash
 
 EXE = updateDynDNS
 ALL_SRCS = $(wildcard *.c) $(wildcard ../../lib/*.c)
-EXCLUDE_SRCS=getURL.c
+#EXCLUDE_SRCS=getURL.c
+EXCLUDE_SRCS=
 SRCS = $(filter-out $(EXCLUDE_SRCS), $(ALL_SRCS))
 OBJS = $(SRCS:%.c=%.o)
 

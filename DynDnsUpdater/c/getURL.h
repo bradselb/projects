@@ -7,4 +7,6 @@
 
 int getURL(char* buf, int bufsize, const char* url, const char* userAgent, const char* user, const char* pass );
 
+int sendHttpRequestAndWaitForReply(const char* hostname, const char* resource, const char* agent, const char* auth, char* reply, int bufsize);
+
 #endif //!defined GETURL_H
