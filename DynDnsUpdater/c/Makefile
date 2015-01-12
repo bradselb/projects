@@ -25,4 +25,4 @@ $(EXE) : $(OBJS)
 	$(CC) -c $(CPPFLAGS) $(CFLAGS) $< -o $@
 
 clean:
-	rm -f *.o $(EXE)
+	rm -f $(OBJS) $(EXE)
