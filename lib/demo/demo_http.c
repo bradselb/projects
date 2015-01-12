@@ -84,7 +84,8 @@ int main(int argc, char* argv[])
     }
 
 
-    result = inet_wait_reply(sock, reply, bufsize, 30000);
+    // wait for the web server's HTML reply.
+    result = inet_wait_reply(sock, reply, bufsize-1, 30000);
     if (result < 0) {
         fprintf(stderr, "%s(), inet_wait_reply() failed.\n", __FUNCTION__);
         goto exit;
@@ -93,7 +94,6 @@ int main(int argc, char* argv[])
     }
 
     printf("%s\n", reply);
-
 
 
 exit:
