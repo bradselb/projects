@@ -16,34 +16,59 @@ struct Config
 {
    int period; // force an update every <period> days
    char* stateFilename; // where is the state file? 
-   char* detectURL; // where to discover my current IP 
-   char* updateURL; // where to update my DynDNS entry
+   char* detectHostname; // host to help me discover my current IP 
+   char* detectResource; // http resource to discover my current IP 
+   char* updateHostname; // where to update my DynDNS entry
+   char* updateResource; // where to update my DynDNS entry
    char* hostname;  // my hostname 
-   char* username;  // my DynDNS user name
-   char* password;  // my DynDNS password
+   char* authorization;  // my DynDNS username:password base64 encoded
 };
 
 // --------------------------------------------------------------------------
 static const int DefaultPeriod = 28; // days
 static const char* DefaultStateFilename = "/var/tmp/DynDnsUpdaterState.dat";
-static const char* DefaultDetectURL = "http://checkip.dyndns.org";
-static const char* DefaultUpdateURL = "http://members.dyndns.org/nic/update";
-//static const char* DefaultHostname = "test.dyndns.org";
-static const char* DefaultHostname = "test.ath.cx";
-static const char* DefaultUserName = "test";
-static const char* DefaultPassword = "test";
+static const char* DefaultDetectHostname = "checkip.dyndns.org";
+static const char* DefaultDetectResource = "/";
+static const char* DefaultUpdateHostname = "members.dyndns.org";
+static const char* DefaultUpdateResource = "/nic/update";
 
+static const char* DefaultHostname = "test.dyndns.org";
+//static const char* DefaultHostname = "test.ath.cx";
 //hostname("test.dnsalias.net"),
 //hostname("test.dnsalias.org"),
 //hostname("test.dnsalias.com"),
 //hostname("test.homeip.net"),
 
+// this is what you get if you do the bash shell one liner (example below)..it does not work.
+//static const char* DefaultAuthorization = "dGVzdDp0ZXN0Cg=="; // == base64("test:test")
+static const char* DefaultAuthorization = "dGVzdDp0ZXN0"; // == base64("test:test")
+
+// how to get the authorizaton string...
+
+// in tcl:
+// package require base64
+// set username {test}
+// set password {test}
+// set token [base64::encode "$username:$password"]
+// puts "$token"
+
+// in python:
+// import base64
+// username = r'test'
+// password = r'test'
+// print(base64.b64encode("%s:%s" %(username, password)))
+
+// this might also work...there is an extra '\n' character
+// bash command line...
+// $ echo "test:test" | base64 -
+
 // --------------------------------------------------------------------------
 #define MAX_STRING_LENGTH 511
 
 // maximum size of buffer used to read/write the whole config file. The magic
-// number 8 comes from there being seven elements, seven lines in the file.
-// Each line maybe a little longer than the max string length.
+// number 8 comes from there being eight elements, eight lines in the file.
+// Each line maybe not be any longer than the max string length. Line that are 
+// long will get truncated and things will likely, not work as expected. 
 #define MAX_BUF_SIZE  (8 * (1 + MAX_STRING_LENGTH))
 
 
@@ -57,11 +82,12 @@ struct Config* createDefaultConfig(void)
         memset(config, 0, sizeof(struct Config));
         setPeriod(config, DefaultPeriod);
         setStateFilename(config, DefaultStateFilename);
-        setDetectURL(config, DefaultDetectURL);
-        setUpdateURL(config, DefaultUpdateURL);
+        setDetectHostname(config, DefaultDetectHostname);
+        setDetectResource(config, DefaultDetectResource);
+        setUpdateHostname(config, DefaultUpdateHostname);
+        setUpdateResource(config, DefaultUpdateResource);
         setHostname(config, DefaultHostname);
-        setUsername(config, DefaultUserName);
-        setPassword(config, DefaultPassword);
+        setAuthorization(config, DefaultAuthorization);
     }
     return config;
 }
@@ -80,11 +106,12 @@ void deleteConfig(struct Config* config)
 {
     if (config) {
         deleteConfigString(config->stateFilename);
-        deleteConfigString(config->detectURL);
-        deleteConfigString(config->updateURL);
+        deleteConfigString(config->detectHostname);
+        deleteConfigString(config->detectResource);
+        deleteConfigString(config->updateHostname);
+        deleteConfigString(config->updateResource);
         deleteConfigString(config->hostname);
-        deleteConfigString(config->username);
-        deleteConfigString(config->password);
+        deleteConfigString(config->authorization);
         memset(config, 0, sizeof(struct Config));
         free(config);
     }
@@ -125,11 +152,12 @@ int saveConfig(const struct Config* config, const char* filename)
    else {
       fprintf(file, "period %d\n", config->period);
       fprintf(file, "State-Filename %s\n", config->stateFilename);
-      fprintf(file, "Detect-URL %s\n", config->detectURL);
-      fprintf(file, "Update-URL %s\n", config->updateURL);
+      fprintf(file, "Detect-Hostname %s\n", config->detectHostname);
+      fprintf(file, "Detect-Resource %s\n", config->detectResource);
+      fprintf(file, "Update-Hostname %s\n", config->updateHostname);
+      fprintf(file, "Update-Resource %s\n", config->updateResource);
       fprintf(file, "Hostname %s\n", config->hostname);
-      fprintf(file, "Username %s\n", config->username);
-      fprintf(file, "Password %s\n", config->password);
+      fprintf(file, "Authorization-Token %s\n", config->authorization);
       fclose(file);
       rc = 0;
    }
@@ -153,15 +181,16 @@ static int parse_config_buf(struct Config* config, const char* buf)
         goto out;
     }
 
-    int count;
-    count = slist_split(head, buf, " \t\n");
+    //int count;
+    //count = 
+    slist_split(head, buf, " \t\n");
 
     struct slist* node; // a node in the list.
     node =  slist_next(head);
     while (node != head) {
         const char* token;
         token = slist_string(node);
-        if (0 == strncmp(token, "period", 5)) {
+        if (0 == strncmp(token, "period", 6)) {
             node = slist_next(node);
             token = slist_string(node);
             if (token) {
@@ -176,41 +205,48 @@ static int parse_config_buf(struct Config* config, const char* buf)
                 setStateFilename(config, token);
                 node = slist_next(node);
             }
-        } else if (0 == strncmp(token, "Detect", 5)) {
+        } else if (0 == strncmp(token, "Detect-Hostname", 10)) {
             node = slist_next(node);
             token = slist_string(node);
             if (token) {
-                setDetectURL(config, token);
+                setDetectHostname(config, token);
                 node = slist_next(node);
             }
-        } else if (0 == strncmp(token, "Update", 5)) {
+        } else if (0 == strncmp(token, "Detect-Resource", 10)) {
             node = slist_next(node);
             token = slist_string(node);
             if (token) {
-                setUpdateURL(config, token);
+                setDetectResource(config, token);
                 node = slist_next(node);
             }
-        } else if (0 == strncmp(token, "Hostname", 5)) {
+        } else if (0 == strncmp(token, "Update-Hostname", 10)) {
+            node = slist_next(node);
+            token = slist_string(node);
+            if (token) {
+                setUpdateHostname(config, token);
+                node = slist_next(node);
+            }
+        } else if (0 == strncmp(token, "Update-Resource", 10)) {
+            node = slist_next(node);
+            token = slist_string(node);
+            if (token) {
+                setUpdateResource(config, token);
+                node = slist_next(node);
+            }
+        } else if (0 == strncmp(token, "Hostname", 8)) {
             node = slist_next(node);
             token = slist_string(node);
             if (token) {
                 setHostname(config, token);
                 node = slist_next(node);
             }
-        } else if (0 == strncmp(token, "Username", 5)) {
+        } else if (0 == strncmp(token, "Authorization", 4)) {
             node = slist_next(node);
             token = slist_string(node);
             if (token) {
-                setUsername(config, token);
+                setAuthorization(config, token);
                 node = slist_next(node);
             }
-        } else if (0 == strncmp(token, "Password", 5)) {
-            node = slist_next(node);
-            token = slist_string(node);
-            if (token) {
-                setPassword(config, token);
-                node = slist_next(node);
-            }        
         } else {
             // ignore unrecognized key word.
             node = slist_next(node);
@@ -319,18 +355,20 @@ int writeConfig(const struct Config* config, int fd)
     byte_count = snprintf(buf, bufsize,
                           "period %d\n"
                           "State-Filename %s\n"
-                          "Detect-URL %s\n"
-                          "Update-URL %s\n"
+                          "Detect-Hostname %s\n"
+                          "Detect-Resource %s\n"
+                          "Update-Hostname %s\n"
+                          "Update-Resource %s\n"
                           "Hostname %s\n"
-                          "Username %s\n"
-                          "Password %s\n",
+                          "Authorization %s\n",
                           config->period,
                           config->stateFilename,
-                          config->detectURL,
-                          config->updateURL,
+                          config->detectHostname,
+                          config->detectResource,
+                          config->updateHostname,
+                          config->updateResource,
                           config->hostname,
-                          config->username,
-                          config->password
+                          config->authorization
                          );
 
     if ((byte_count < 0) || (!(byte_count<bufsize))) {
@@ -376,15 +414,27 @@ const char* getStateFilename(const struct Config* config)
 }
 
 // --------------------------------------------------------------------------
-const char* getDetectURL(const struct Config* config)
+const char* getDetectHostname(const struct Config* config)
 {
-    return (config ? config->detectURL : 0);
+    return (config ? config->detectHostname : 0);
 }
 
 // --------------------------------------------------------------------------
-const char* getUpdateURL(const struct Config* config)
+const char* getDetectResource(const struct Config* config)
 {
-    return (config ? config->updateURL : 0);
+    return (config ? config->detectResource : 0);
+}
+
+// --------------------------------------------------------------------------
+const char* getUpdateHostname(const struct Config* config)
+{
+    return (config ? config->updateHostname : 0);
+}
+
+// --------------------------------------------------------------------------
+const char* getUpdateResource(const struct Config* config)
+{
+    return (config ? config->updateResource : 0);
 }
 
 // --------------------------------------------------------------------------
@@ -394,17 +444,10 @@ const char* getHostname(const struct Config* config)
 }
 
 // --------------------------------------------------------------------------
-const char* getUsername(const struct Config* config)
+const char* getAuthorization(const struct Config* config)
 {
-    return (config ? config->username : 0);
+    return (config ? config->authorization : 0);
 }
-
-// --------------------------------------------------------------------------
-const char* getPassword(const struct Config* config)
-{
-    return (config ? config->password : 0);
-}
-
 
 // --------------------------------------------------------------------------
 int setPeriod(struct Config* config, int period)
@@ -462,7 +505,7 @@ int setStateFilename(struct Config* config, const char* filename)
 }
 
 // --------------------------------------------------------------------------
-int setDetectURL(struct Config* config, const char* src)
+int setDetectHostname(struct Config* config, const char* src)
 {
     int rc;
     size_t length;
@@ -476,10 +519,10 @@ int setDetectURL(struct Config* config, const char* src)
         rc = -1;
     } else {
         strncpy(buf, src, length+1);
-        if (config->detectURL) {
-            free(config->detectURL);
+        if (config->detectHostname) {
+            free(config->detectHostname);
         }
-        config->detectURL = buf;
+        config->detectHostname = buf;
         // now the config object owns the buffer
         rc = 0;
     }
@@ -487,7 +530,7 @@ int setDetectURL(struct Config* config, const char* src)
 }
 
 // --------------------------------------------------------------------------
-int setUpdateURL(struct Config* config, const char* src)
+int setDetectResource(struct Config* config, const char* src)
 {
     int rc;
     size_t length;
@@ -501,10 +544,60 @@ int setUpdateURL(struct Config* config, const char* src)
         rc = -1;
     } else {
         strncpy(buf, src, length+1);
-        if (config->updateURL) {
-            free(config->updateURL);
+        if (config->detectResource) {
+            free(config->detectResource);
         }
-        config->updateURL = buf;
+        config->detectResource = buf;
+        // now the config object owns the buffer
+        rc = 0;
+    }
+    return rc;
+}
+
+// --------------------------------------------------------------------------
+int setUpdateHostname(struct Config* config, const char* src)
+{
+    int rc;
+    size_t length;
+    char* buf;
+
+    length = strnlen(src, MAX_STRING_LENGTH);
+
+    if (!config || !src) {
+        rc = -1;
+    } else if (!(buf = malloc(length + 1))) {
+        rc = -1;
+    } else {
+        strncpy(buf, src, length+1);
+        if (config->updateHostname) {
+            free(config->updateHostname);
+        }
+        config->updateHostname = buf;
+        // now the config object owns the buffer
+        rc = 0;
+    }
+    return rc;
+}
+
+// --------------------------------------------------------------------------
+int setUpdateResource(struct Config* config, const char* src)
+{
+    int rc;
+    size_t length;
+    char* buf;
+
+    length = strnlen(src, MAX_STRING_LENGTH);
+
+    if (!config || !src) {
+        rc = -1;
+    } else if (!(buf = malloc(length + 1))) {
+        rc = -1;
+    } else {
+        strncpy(buf, src, length+1);
+        if (config->updateResource) {
+            free(config->updateResource);
+        }
+        config->updateResource = buf;
         // now the config object owns the buffer
         rc = 0;
     }
@@ -537,7 +630,7 @@ int setHostname(struct Config* config, const char* src)
 }
 
 // --------------------------------------------------------------------------
-int setUsername(struct Config* config, const char* src)
+int setAuthorization(struct Config* config, const char* src)
 {
     int rc;
     size_t length;
@@ -551,37 +644,11 @@ int setUsername(struct Config* config, const char* src)
         rc = -1;
     } else {
         strncpy(buf, src, length+1);
-        if (config->username) {
-            memset(config->username, 0, strlen(config->username));
-            free(config->username);
+        if (config->authorization) {
+            memset(config->authorization, 0, strlen(config->authorization));
+            free(config->authorization);
         }
-        config->username = buf;
-        // now the config object owns the buffer
-        rc = 0;
-    }
-    return rc;
-}
-
-// --------------------------------------------------------------------------
-int setPassword(struct Config* config, const char* src)
-{
-    int rc;
-    size_t length;
-    char* buf;
-
-    length = strnlen(src, MAX_STRING_LENGTH);
-
-    if (!config || !src) {
-        rc = -1;
-    } else if (!(buf = malloc(length + 1))) {
-        rc = -1;
-    } else {
-        strncpy(buf, src, length+1);
-        if (config->password) {
-            memset(config->password, 0, strlen(config->password));
-            free(config->password);
-        }
-        config->password = buf;
+        config->authorization = buf;
         // now the config object owns the buffer
         rc = 0;
     }
@@ -600,11 +667,13 @@ int compareConfig(const struct Config* cfg0, const struct Config* cfg1)
 
     else if (getPeriod(cfg0) != getPeriod(cfg1) ||
         0 != strcmp(getStateFilename(cfg0), getStateFilename(cfg1)) ||
-        0 != strcmp(getDetectURL(cfg0), getDetectURL(cfg1)) ||
-        0 != strcmp(getUpdateURL(cfg0), getUpdateURL(cfg1)) ||
+        0 != strcmp(getDetectHostname(cfg0), getDetectHostname(cfg1)) ||
+        0 != strcmp(getDetectResource(cfg0), getDetectResource(cfg1)) ||
+        0 != strcmp(getUpdateHostname(cfg0), getUpdateHostname(cfg1)) ||
+        0 != strcmp(getUpdateResource(cfg0), getUpdateResource(cfg1)) ||
         0 != strcmp(getHostname(cfg0), getHostname(cfg1)) ||
-        0 != strcmp(getUsername(cfg0), getUsername(cfg1)) ||
-        0 != strcmp(getPassword(cfg0), getPassword(cfg1)))
+        0 != strcmp(getAuthorization(cfg0), getAuthorization(cfg1))
+        )
     {
         rc = 1; // the two are different
     }

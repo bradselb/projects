@@ -10,7 +10,7 @@
 
 // update this with major revisions. 
 // req'd format is: "Company-model-version"
-static const char* USER_AGENT = "Self-Brad's embedded DynDNS Updater-v0.7";
+static const char* USER_AGENT = "Self-Brad's embedded DynDNS Updater-v0.8";
 static const char* DEFAULT_CONFIG_FILE_PATH = "/var/tmp/DynDnsUpdaterConfig.dat";
 
 
@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
    config = loadConfig(DEFAULT_CONFIG_FILE_PATH);
    if (!config) {
       fprintf(stderr, "Config File does not exist\n");
-      fprintf(stderr, "creating a default config\n");
+      fprintf(stderr, "creating a default config, '%s'\n", DEFAULT_CONFIG_FILE_PATH);
       config = createDefaultConfig();
       saveConfig(config, DEFAULT_CONFIG_FILE_PATH);
    }
@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
    else if (!(state = newState())) {
       fprintf(stderr, "failed to allocate State object\n");
    }
-   else if ( 0 != (rc = loadState(state, getStateFilename(config)))) {
+   else if (0 != (rc = loadState(state, getStateFilename(config)))) {
       fprintf(stderr, "State File does not exist\n");
       fprintf(stderr, "creating a default state file\n");
       setEnabled(state, 1);
@@ -52,24 +52,23 @@ int main(int argc, char* argv[])
       setResult(state, "good");
       saveState(state, getStateFilename(config));
    }
-   else if ( !isEnabled(state) ) {
+   else if (!isEnabled(state)) {
       fprintf(stderr, "not enabled.\n");
    } 
-   else if ( 0 != strncmp(getPrevResult(state), "good", 4) ) {
+   else if (0 != strncmp(getPrevResult(state), "good", 4)) {
       fprintf(stderr, "result of previous update was '%s', not 'good'\n", getPrevResult(state));
    } 
-//int getURL(char* buf, int bufsize, const char* url, const char* userAgent, const char* user, const char* pass );
-   else if ( 0 != (rc = getURL(reply, replySize, getDetectURL(config), USER_AGENT, 0, 0)) ) {
-      fprintf(stderr, "getURL(%s) returned: %d\n", getDetectURL(config), rc);
+   else if (0 != (rc = sendHttpRequestAndWaitForReply(getDetectHostname(config), getDetectResource(config), USER_AGENT, 0, reply, replySize))) {
+      fprintf(stderr, "getURL() returned: %d\n", rc);
    }
-   else if ( 0 != (rc = extractIpAddress(reply, currentIp, sizeof currentIp / sizeof currentIp[0])) ) {
+   else if (0 != (rc = extractIpAddress(reply, currentIp, sizeof currentIp / sizeof currentIp[0]))) {
       fprintf(stderr, "failed to extract Ip address from reply text\n");
       fprintf(stderr, "%s\n", reply);
    }
-   else if ( (daysSinceLastUpdate = daysSince(getUpdateDateTimeString(state))) < 0 ) {
+   else if ((daysSinceLastUpdate = daysSince(getUpdateDateTimeString(state))) < 0) {
       fprintf(stderr, "unable to compute days since last update\n"); 
    }
-   else if ( 0 == strcmp(currentIp, getPrevIp(state)) && daysSinceLastUpdate < getPeriod(config) ) {
+   else if (0 == strcmp(currentIp, getPrevIp(state)) && daysSinceLastUpdate < getPeriod(config)) {
       fprintf(stderr, "current IP Address is: '%s'\n", currentIp);
       fprintf(stderr, "IP has not changed and only %d days have elapsed since last update.\n", daysSinceLastUpdate);
    }
@@ -77,35 +76,36 @@ int main(int argc, char* argv[])
 
       fprintf(stderr, "current IP Address is: '%s'\n", currentIp);
 
-      // add the form info to the update URL 
-      int urlbufsize = strlen(getUpdateURL(config)) + strlen("?hostname=") + strlen(getHostname(config)) + strlen("&myip=") + strlen(currentIp) + 10;
+      // add the form info to the update resource 
+      int urlbufsize = strlen(getUpdateResource(config)) + strlen("?hostname=") + strlen(getHostname(config)) + strlen("&myip=") + strlen(currentIp) + 10;
       char* urlbuf = malloc(urlbufsize);
       memset(urlbuf, 0, urlbufsize);
-      snprintf(urlbuf, urlbufsize, "%s?hostname=%s&myip=%s", getUpdateURL(config), getHostname(config), currentIp);
-      fprintf(stderr, "URL is: %s\n", urlbuf);
+      snprintf(urlbuf, urlbufsize, "%s?hostname=%s&myip=%s", getUpdateResource(config), getHostname(config), currentIp);
+      fprintf(stderr, "resource string is: %s\n", urlbuf);
 
       // send the updated ip address to  DynDNS.org
       memset(reply, 0, sizeof reply);
-      rc = getURL(reply, replySize, urlbuf, USER_AGENT, getUsername(config), getPassword(config));
+      rc = sendHttpRequestAndWaitForReply(getUpdateHostname(config), urlbuf, USER_AGENT, getAuthorization(config), reply, replySize);
       free(urlbuf);
       urlbuf = 0;
 
       if ( rc ) {
          setEnabled(state, 0);
-         fprintf(stderr, "getURL() returned: %d", rc);
+         fprintf(stderr, "sendHttpRequestAndWaitForReply() returned: %d", rc);
          fprintf(stderr, "%s\n", reply);
-      } else {
+      } else  {
          fprintf(stdout, "Update result is: %s\n",  reply);
 
          // update the state
          setEnabled(state, 1);
          setUpdateTimeNow(state);
          setIp(state, currentIp);
+         // TODO: need to parse the actual result from the reply buffer. 
          setResult(state, reply);
 
       }
-      // persit state to file. 
-      saveState(state, getStateFilename(config));
+      //TODO: have to pull the actual result from the reply. (see above)
+      // saveState(state, getStateFilename(config));
    }
 
    deleteState(state);

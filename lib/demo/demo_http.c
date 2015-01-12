@@ -12,7 +12,7 @@
 int main(int argc, char* argv[])
 {
     int rc;
-    struct HttpRequest* request;
+    struct HttpRequest* request = 0;
     char* request_str = 0; // a buffer to hold the request string
     char* reply = 0;
     int bufsize = 4096;
