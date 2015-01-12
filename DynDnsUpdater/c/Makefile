@@ -2,12 +2,11 @@ SHELL=/bin/bash
 
 EXE = updateDynDNS
 ALL_SRCS = $(wildcard *.c) $(wildcard ../../lib/*.c)
-#EXCLUDE_SRCS=getURL.c
 EXCLUDE_SRCS=
 SRCS = $(filter-out $(EXCLUDE_SRCS), $(ALL_SRCS))
 OBJS = $(SRCS:%.c=%.o)
 
-MY_LIB=brad
+MY_LIB = brad
 MY_LIBDIR = ../../lib
 
 CFLAGS += -Wall -O2 -std=gnu99 -I$(MY_LIBDIR)
