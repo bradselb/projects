@@ -11,7 +11,7 @@ MY_LIB=brad
 MY_LIBDIR = ../../lib
 
 CFLAGS += -Wall -O2 -std=gnu99 -I$(MY_LIBDIR)
-LDFLAGS += -L$(MY_LIBDIR)
+#LDFLAGS += -L$(MY_LIBDIR)
 
 all : $(EXE)
 
@@ -19,7 +19,8 @@ lib :
 	make -C $(MY_LIBDIR) $<
 
 $(EXE) : $(OBJS)
-	$(CC)  $(LDFLAGS) -o $@ $(OBJS) -l$(MY_LIB)
+	$(CC)  $(LDFLAGS) -o $@ $(OBJS)
+#	$(CC)  $(LDFLAGS) -o $@ $(OBJS) -l$(MY_LIB)
 
 %.o : %.c
 	$(CC) -c $(CPPFLAGS) $(CFLAGS) $< -o $@
