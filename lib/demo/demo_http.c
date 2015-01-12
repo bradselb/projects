@@ -4,7 +4,7 @@
 #include "hexdump.h"
 #include "inet.h"
 
-#include <stdlib.h> 
+#include <stdlib.h> // malloc()
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h> // close()

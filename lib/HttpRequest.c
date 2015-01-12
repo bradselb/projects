@@ -64,7 +64,7 @@ int http_set_host(struct HttpRequest* request, const char* host)
 {
     int rc = -1;
 
-    //fprintf(stderr, "%s()\n", __FUNCTION__);
+    //fprintf(stderr, "%s(), host: '%s'\n", __FUNCTION__, host);
  
     if (request) {
         rc = allocate_and_copy_string(&request->host, host);
@@ -93,7 +93,7 @@ int http_set_resource(struct HttpRequest* request, const char* resource)
 {
     int rc = -1;
 
-    //fprintf(stderr, "%s()\n", __FUNCTION__);
+    //fprintf(stderr, "%s(), resource: '%s'\n", __FUNCTION__, resource);
  
     if (request) {
         rc = allocate_and_copy_string(&request->resource, resource);
@@ -145,7 +145,7 @@ int http_to_string(struct HttpRequest* request, char* buf, unsigned int bufsize)
         memset(buf, 0, bufsize);
 
         size = bufsize - (length + 1);
-        count = snprintf(buf+length, size, "GET %s HTTP/1.1\r\n", request->resource);
+        count = snprintf(buf+length, size, "GET %s HTTP/1.0\r\n", request->resource);
         if (0 < count && count < size) {
             length += count;
         } else {
@@ -153,7 +153,11 @@ int http_to_string(struct HttpRequest* request, char* buf, unsigned int bufsize)
         }
 
         size = bufsize - (length + 1);
-        count = snprintf(buf+length, size, "Host: %s:%d\r\n", request->host, request->port);
+        if (80 == request->port) {
+            count = snprintf(buf+length, size, "Host: %s\r\n", request->host);
+        } else {
+            count = snprintf(buf+length, size, "Host: %s:%d\r\n", request->host, request->port);
+        }
         if (0 < count && count < size) {
             length += count;
         } else {
