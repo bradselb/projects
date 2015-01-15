@@ -5,33 +5,28 @@
   * pid file
   * override config file params
 
-- Complete the Config object
+- Complete the Config class 
    loadConfig() - done.
-   readConfig() - done
-   writeConfig() 
+   readConfig() - done.
+   writeConfig() - done. (untested)
+
+- refactor and CLEANUP the Config class!!!!
 
 - unit tests
-   Config - done.
+   Config
    State
    extractIpAddress()
-   getURL()
+   sendHttpRequestAndWait()
+   findReply()
    timeHelpers
 
-- read config file from disk instead of always using the default config.
-  (this is working now but, could definitely be improved).
-
-- fix / improve current IP addr discovery (not sure what I had in mind here).
-- improve ip address extraction. 
-- standardize on new & delete instead of create & destroy.
-- be const correct. 
-- create a separate GUI tool to create and manip the Config file
+* make state file same as the Tcl version.
+* add an HTTP response class and revise send and wait function
+* move send and wait out to library.
 - move config and state files to proper locations
 
 - make it a proper daemon
 - write to syslog
-- keep a history of the state...or, derive it from log file? 
 
-ideas for new features: 
-- use sqlite database to keep track of update history.
-- consider removing dependency upon libcurl.
-  --> re-write getURL or add a more general http client object to lib.
+- create a separate GUI tool to create and manip the Config file
+

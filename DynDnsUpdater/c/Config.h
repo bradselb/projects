@@ -23,9 +23,10 @@ struct Config* loadConfig(const char* filename);
 // returns zero if successful, non zero otherwise.
 int saveConfig(const struct Config*, const char* filename);
 
-// low level functions to deal with persitent config similar to load and save above.
+// low level function similar to load() 
 struct Config* readConfig(int fd);
 
+// low level function similar to save().
 // returns number of bytes written on success less than zero otherwise.
 int writeConfig(const struct Config*, int fd);
 
