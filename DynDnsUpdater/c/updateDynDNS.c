@@ -2,6 +2,7 @@
 #include "State.h"
 #include "getURL.h"
 #include "extractIpAddress.h"
+#include "findReply.h"
 #include "timeHelpers.h"
 
 #include <stdio.h>
@@ -9,8 +10,10 @@
 #include <string.h>
 
 // update this with major revisions. 
+#define  VERSION  "v0.9 (14-Jan-2015)"
+
 // req'd format is: "Company-model-version"
-static const char* USER_AGENT = "Self-Brad's embedded DynDNS Updater-v0.8";
+static const char* USER_AGENT = "Self-Brad's embedded DynDNS Updater-"VERSION;
 static const char* DEFAULT_CONFIG_FILE_PATH = "/var/tmp/DynDnsUpdaterConfig.dat";
 
 
@@ -22,10 +25,10 @@ int main(int argc, char* argv[])
    struct State* state = 0;
    char currentIp[32];
    int daysSinceLastUpdate;
-   const int replySize = 512;
-   char reply[replySize];
+   const int responseSize = 512;
+   char response[responseSize];
 
-   memset(reply, 0, sizeof reply);
+   memset(response, 0, sizeof response);
    memset(currentIp, 0, sizeof currentIp);
 
 
@@ -58,12 +61,12 @@ int main(int argc, char* argv[])
    else if (0 != strncmp(getPrevResult(state), "good", 4)) {
       fprintf(stderr, "result of previous update was '%s', not 'good'\n", getPrevResult(state));
    } 
-   else if (0 != (rc = sendHttpRequestAndWaitForReply(getDetectHostname(config), getDetectResource(config), USER_AGENT, 0, reply, replySize))) {
-      fprintf(stderr, "getURL() returned: %d\n", rc);
+   else if (0 != (rc = sendHttpRequestAndWaitForReply(getDetectHostname(config), getDetectResource(config), USER_AGENT, 0, response, responseSize))) {
+      fprintf(stderr, "sendHttpRequestAndWaitForReply() returned: %d\n", rc);
    }
-   else if (0 != (rc = extractIpAddress(reply, currentIp, sizeof currentIp / sizeof currentIp[0]))) {
-      fprintf(stderr, "failed to extract Ip address from reply text\n");
-      fprintf(stderr, "%s\n", reply);
+   else if (0 != (rc = extractIpAddress(response, currentIp, sizeof currentIp / sizeof currentIp[0]))) {
+      fprintf(stderr, "failed to extract Ip address from response text\n");
+      fprintf(stderr, "%s\n", response);
    }
    else if ((daysSinceLastUpdate = daysSince(getUpdateDateTimeString(state))) < 0) {
       fprintf(stderr, "unable to compute days since last update\n"); 
@@ -74,38 +77,34 @@ int main(int argc, char* argv[])
    }
    else { 
 
-      fprintf(stderr, "current IP Address is: '%s'\n", currentIp);
+      fprintf(stdout, "previous IP Address is: '%s'\n", getPrevIp(state));
+      fprintf(stdout, "current  IP Address is: '%s'\n", currentIp);
 
       // add the form info to the update resource 
       int urlbufsize = strlen(getUpdateResource(config)) + strlen("?hostname=") + strlen(getHostname(config)) + strlen("&myip=") + strlen(currentIp) + 10;
       char* urlbuf = malloc(urlbufsize);
       memset(urlbuf, 0, urlbufsize);
       snprintf(urlbuf, urlbufsize, "%s?hostname=%s&myip=%s", getUpdateResource(config), getHostname(config), currentIp);
-      fprintf(stderr, "resource string is: %s\n", urlbuf);
 
-      // send the updated ip address to  DynDNS.org
-      memset(reply, 0, sizeof reply);
-      rc = sendHttpRequestAndWaitForReply(getUpdateHostname(config), urlbuf, USER_AGENT, getAuthorization(config), reply, replySize);
+      memset(response, 0, sizeof response);
+      rc = sendHttpRequestAndWaitForReply(getUpdateHostname(config), urlbuf, USER_AGENT, getAuthorization(config), response, responseSize);
+      //fprintf(stderr, "%s\n", response);
       free(urlbuf);
       urlbuf = 0;
 
-      if ( rc ) {
+      if (rc) {
          setEnabled(state, 0);
-         fprintf(stderr, "sendHttpRequestAndWaitForReply() returned: %d", rc);
-         fprintf(stderr, "%s\n", reply);
       } else  {
-         fprintf(stdout, "Update result is: %s\n",  reply);
-
          // update the state
+         const char* reply = 0;
+         reply = findReply(response, responseSize);
          setEnabled(state, 1);
          setUpdateTimeNow(state);
          setIp(state, currentIp);
-         // TODO: need to parse the actual result from the reply buffer. 
          setResult(state, reply);
 
       }
-      //TODO: have to pull the actual result from the reply. (see above)
-      // saveState(state, getStateFilename(config));
+      saveState(state, getStateFilename(config));
    }
 
    deleteState(state);
