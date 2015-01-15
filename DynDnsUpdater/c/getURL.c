@@ -212,11 +212,13 @@ int sendHttpRequestAndWaitForReply(const char* hostname, const char* resource, c
 
     // and reassure ourselves that it is right and proper. 
     if (verbose > 0) {
+        printf("\n");
+        printf("%s", request_str);
+        fflush(stdout);
+    }
+    if (verbose > 1) {
         hexdump(request_str, 256);
     }
-    printf("\n");
-    printf("%s", request_str);
-    fflush(stdout);
 
 
     // connect to the web server. 
@@ -247,9 +249,9 @@ int sendHttpRequestAndWaitForReply(const char* hostname, const char* resource, c
         fprintf(stderr, "received %ld bytes.\n\n", result);
     }
 
-    printf("%s\n", reply);
-
-
+    if (verbose >0) {
+        printf("%s\n", reply);
+    }
 
 exit:
     if (sock > 0) {
