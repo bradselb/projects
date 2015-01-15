@@ -2,9 +2,9 @@
 
 // returns a pointer to the reply in a buffer containing an HTTP response
 
-char* findReply(const char* buf, unsigned int bufsize)
+const char* findReply(const char* buf, unsigned int bufsize)
 {
-    char* p;
+    const char* p;
     unsigned int i;
     char ch;
 
