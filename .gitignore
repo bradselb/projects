@@ -1,3 +1,6 @@
+# swap files
+*.sw?
+
 # Object files
 *.o
 
