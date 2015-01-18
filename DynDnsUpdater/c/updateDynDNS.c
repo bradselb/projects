@@ -10,7 +10,7 @@
 #include <string.h>
 
 // update this with major revisions. 
-#define  VERSION  "v0.9 (14-Jan-2015)"
+#define  VERSION  "v0.91 (18-Jan-2015)"
 
 // req'd format is: "Company-model-version"
 static const char* USER_AGENT = "Self-Brad's embedded DynDNS Updater-"VERSION;
@@ -18,19 +18,26 @@ static const char* DEFAULT_CONFIG_FILE_PATH = "/var/tmp/DynDnsUpdaterConfig.dat"
 
 
 // --------------------------------------------------------------------------
+// local functions
+static char* createResourceQueryString(const struct Config* config, const char* ip);
+
+
+// --------------------------------------------------------------------------
 int main(int argc, char* argv[])
 {
-   int rc = 0;
+   int rc;
    struct Config* config = 0;
    struct State* state = 0;
    char currentIp[32];
    int daysSinceLastUpdate;
+   char* resource = 0; // the HTTP resource string with query appended
    const int responseSize = 512;
    char response[responseSize];
 
+   rc = 1; // return failure by default. 
+
    memset(response, 0, sizeof response);
    memset(currentIp, 0, sizeof currentIp);
-
 
    config = loadConfig(DEFAULT_CONFIG_FILE_PATH);
    if (!config) {
@@ -48,7 +55,7 @@ int main(int argc, char* argv[])
    }
    else if (0 != (rc = loadState(state, getStateFilename(config)))) {
       fprintf(stderr, "State File does not exist\n");
-      fprintf(stderr, "creating a default state file\n");
+      fprintf(stderr, "creating a default state file.\n");
       setEnabled(state, 1);
       setUpdateTimeNow(state);
       setIp(state, "127.0.0.1");
@@ -68,6 +75,9 @@ int main(int argc, char* argv[])
       fprintf(stderr, "failed to extract Ip address from response text\n");
       fprintf(stderr, "%s\n", response);
    }
+   else if (0 == (resource = createResourceQueryString(config, currentIp))) {
+      fprintf(stderr, "failed to create update resource query\n");
+   }
    else if ((daysSinceLastUpdate = daysSince(getUpdateDateTimeString(state))) < 0) {
       fprintf(stderr, "unable to compute days since last update\n"); 
    }
@@ -78,18 +88,12 @@ int main(int argc, char* argv[])
    else { 
       fprintf(stdout, "previous IP Address is: '%s'\n", getPrevIp(state));
       fprintf(stdout, "current  IP Address is: '%s'\n", currentIp);
+      rc = 0; // report success.
 
-      // add the form/query info to the resource string
-      int resourceSize = strlen(getUpdateResource(config)) + strlen("?hostname=") + strlen(getHostname(config)) + strlen("&myip=") + strlen(currentIp) + 10;
-      char* resource = malloc(resourceSize);
-      memset(resource, 0, resourceSize);
-      snprintf(resource, resourceSize, "%s?hostname=%s&myip=%s", getUpdateResource(config), getHostname(config), currentIp);
 
       memset(response, 0, sizeof response);
       rc = sendHttpRequestAndWaitForReply(getUpdateHostname(config), resource, USER_AGENT, getAuthorization(config), response, responseSize);
       //fprintf(stderr, "%s\n", response);
-      free(resource);
-      resource = 0;
 
       if (rc) {
          setEnabled(state, 0);
@@ -101,14 +105,40 @@ int main(int argc, char* argv[])
          setUpdateTimeNow(state);
          setIp(state, currentIp);
          setResult(state, reply);
-
       }
       saveState(state, getStateFilename(config));
    }
 
+   if (resource) {
+      free(resource);
+   }
    deleteState(state);
    deleteConfig(config);
 
-    return 0;
+   return rc;
+}
+
+// --------------------------------------------------------------------------
+// We have to include some form data in the http request that we send to
+// the IP address. This function will append the query to the base resource
+// if successful, this function allocates a buffer from the heap! 
+// caller **MUST** free the returned buffer!!!
+// returns the augmented resource if and returns zero if not successful.
+char* createResourceQueryString(const struct Config* config, const char* ip)
+{
+    char* buf = 0;
+    int bufsize;
+    
+    bufsize = strlen(getUpdateResource(config))
+            + strlen("?hostname=") + strlen(getHostname(config))
+            + strlen("&myip=") + strlen(ip)
+            + 10; // gratuitous fudge factor.
+
+    buf = malloc(bufsize);
+    if (buf) {
+        memset(buf, 0, bufsize);
+        snprintf(buf, bufsize, "%s?hostname=%s&myip=%s", getUpdateResource(config), getHostname(config), ip);
+    }
+    return buf;
 }
 
