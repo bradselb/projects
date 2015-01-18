@@ -76,21 +76,20 @@ int main(int argc, char* argv[])
       fprintf(stderr, "IP has not changed and only %d days have elapsed since last update.\n", daysSinceLastUpdate);
    }
    else { 
-
       fprintf(stdout, "previous IP Address is: '%s'\n", getPrevIp(state));
       fprintf(stdout, "current  IP Address is: '%s'\n", currentIp);
 
-      // add the form info to the update resource 
-      int urlbufsize = strlen(getUpdateResource(config)) + strlen("?hostname=") + strlen(getHostname(config)) + strlen("&myip=") + strlen(currentIp) + 10;
-      char* urlbuf = malloc(urlbufsize);
-      memset(urlbuf, 0, urlbufsize);
-      snprintf(urlbuf, urlbufsize, "%s?hostname=%s&myip=%s", getUpdateResource(config), getHostname(config), currentIp);
+      // add the form/query info to the resource string
+      int resourceSize = strlen(getUpdateResource(config)) + strlen("?hostname=") + strlen(getHostname(config)) + strlen("&myip=") + strlen(currentIp) + 10;
+      char* resource = malloc(resourceSize);
+      memset(resource, 0, resourceSize);
+      snprintf(resource, resourceSize, "%s?hostname=%s&myip=%s", getUpdateResource(config), getHostname(config), currentIp);
 
       memset(response, 0, sizeof response);
-      rc = sendHttpRequestAndWaitForReply(getUpdateHostname(config), urlbuf, USER_AGENT, getAuthorization(config), response, responseSize);
+      rc = sendHttpRequestAndWaitForReply(getUpdateHostname(config), resource, USER_AGENT, getAuthorization(config), response, responseSize);
       //fprintf(stderr, "%s\n", response);
-      free(urlbuf);
-      urlbuf = 0;
+      free(resource);
+      resource = 0;
 
       if (rc) {
          setEnabled(state, 0);
