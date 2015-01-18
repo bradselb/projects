@@ -466,39 +466,43 @@ int setPeriod(struct Config* config, int period)
 }
 
 
+// --------------------------------------------------------------------------
+char* malloc_and_strcpy(const char* src)
+{
+    char* buf;
+    size_t bufsize;
 
+    buf = 0;
+    bufsize = 1 + strnlen(src, MAX_STRING_LENGTH);
 
-// TODO:
-// GOOD Grief!!! 
-// Factor out the common function !!!
+    if (bufsize > 1) {
+        buf = malloc(bufsize);
+    }
 
+    if (buf) {
+        strncpy(buf, src, bufsize);
+    }
+
+    return buf;
+}
 
 
 // --------------------------------------------------------------------------
 int setStateFilename(struct Config* config, const char* filename)
 {
     int rc;
-    size_t length;
-    char* buf;
-    const char* src = filename;
+
+    rc = -1;
 
     if (!filename) {
-        src = DefaultStateFilename;
+        filename = DefaultStateFilename;
     }
 
-    length = strnlen(src, MAX_STRING_LENGTH);
-
-    if (!config) {
-        rc = -1;
-    } else if (!(buf = malloc(length + 1))) {
-        rc = -1;
-    } else {
-        strncpy(buf, src, length+1);
+    if (config) {
         if (config->stateFilename) {
             free(config->stateFilename);
         }
-        config->stateFilename = buf;
-        // now the config object owns the buffer
+        config->stateFilename = malloc_and_strcpy(filename);
         rc = 0;
     }
     return rc;
@@ -508,22 +512,13 @@ int setStateFilename(struct Config* config, const char* filename)
 int setDetectHostname(struct Config* config, const char* src)
 {
     int rc;
-    size_t length;
-    char* buf;
 
-    length = strnlen(src, MAX_STRING_LENGTH);
-
-    if (!config || !src) {
-        rc = -1;
-    } else if (!(buf = malloc(length + 1))) {
-        rc = -1;
-    } else {
-        strncpy(buf, src, length+1);
+    rc = -1;
+    if (config && src) {
         if (config->detectHostname) {
             free(config->detectHostname);
         }
-        config->detectHostname = buf;
-        // now the config object owns the buffer
+        config->detectHostname = malloc_and_strcpy(src);
         rc = 0;
     }
     return rc;
@@ -533,22 +528,13 @@ int setDetectHostname(struct Config* config, const char* src)
 int setDetectResource(struct Config* config, const char* src)
 {
     int rc;
-    size_t length;
-    char* buf;
 
-    length = strnlen(src, MAX_STRING_LENGTH);
-
-    if (!config || !src) {
-        rc = -1;
-    } else if (!(buf = malloc(length + 1))) {
-        rc = -1;
-    } else {
-        strncpy(buf, src, length+1);
+    rc = -1;
+    if (config && src) {
         if (config->detectResource) {
             free(config->detectResource);
         }
-        config->detectResource = buf;
-        // now the config object owns the buffer
+        config->detectResource = malloc_and_strcpy(src);
         rc = 0;
     }
     return rc;
@@ -558,22 +544,13 @@ int setDetectResource(struct Config* config, const char* src)
 int setUpdateHostname(struct Config* config, const char* src)
 {
     int rc;
-    size_t length;
-    char* buf;
 
-    length = strnlen(src, MAX_STRING_LENGTH);
-
-    if (!config || !src) {
-        rc = -1;
-    } else if (!(buf = malloc(length + 1))) {
-        rc = -1;
-    } else {
-        strncpy(buf, src, length+1);
+    rc = -1;
+    if (config && src) {
         if (config->updateHostname) {
             free(config->updateHostname);
         }
-        config->updateHostname = buf;
-        // now the config object owns the buffer
+        config->updateHostname = malloc_and_strcpy(src);
         rc = 0;
     }
     return rc;
@@ -583,22 +560,13 @@ int setUpdateHostname(struct Config* config, const char* src)
 int setUpdateResource(struct Config* config, const char* src)
 {
     int rc;
-    size_t length;
-    char* buf;
 
-    length = strnlen(src, MAX_STRING_LENGTH);
-
-    if (!config || !src) {
-        rc = -1;
-    } else if (!(buf = malloc(length + 1))) {
-        rc = -1;
-    } else {
-        strncpy(buf, src, length+1);
+    rc = -1;
+    if (config && src) {
         if (config->updateResource) {
             free(config->updateResource);
         }
-        config->updateResource = buf;
-        // now the config object owns the buffer
+        config->updateResource = malloc_and_strcpy(src);
         rc = 0;
     }
     return rc;
@@ -608,22 +576,13 @@ int setUpdateResource(struct Config* config, const char* src)
 int setHostname(struct Config* config, const char* src)
 {
     int rc;
-    size_t length;
-    char* buf;
 
-    length = strnlen(src, MAX_STRING_LENGTH);
-
-    if (!config || !src) {
-        rc = -1;
-    } else if (!(buf = malloc(length + 1))) {
-        rc = -1;
-    } else {
-        strncpy(buf, src, length+1);
+    rc = -1;
+    if (config && src) {
         if (config->hostname) {
             free(config->hostname);
         }
-        config->hostname = buf;
-        // now the config object owns the buffer
+        config->hostname = malloc_and_strcpy(src);
         rc = 0;
     }
     return rc;
@@ -633,23 +592,14 @@ int setHostname(struct Config* config, const char* src)
 int setAuthorization(struct Config* config, const char* src)
 {
     int rc;
-    size_t length;
-    char* buf;
 
-    length = strnlen(src, MAX_STRING_LENGTH);
-
-    if (!config || !src) {
-        rc = -1;
-    } else if (!(buf = malloc(length + 1))) {
-        rc = -1;
-    } else {
-        strncpy(buf, src, length+1);
+    rc = -1;
+    if (config && src) {
         if (config->authorization) {
             memset(config->authorization, 0, strlen(config->authorization));
             free(config->authorization);
         }
-        config->authorization = buf;
-        // now the config object owns the buffer
+        config->authorization = malloc_and_strcpy(src);
         rc = 0;
     }
     return rc;
