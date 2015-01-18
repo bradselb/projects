@@ -1,31 +1,28 @@
 - accept command line args
+  * version 
+  * help
   * config file path
-  * version
   * log file 
   * pid file
-  * override config file params
-
-- Complete the Config class 
-   loadConfig() - done.
-   readConfig() - done.
-   writeConfig() - done. (untested)
-
-- refactor and CLEANUP the Config class!!!!
 
 - unit tests
    Config
    State
    extractIpAddress()
-   sendHttpRequestAndWait()
    findReply()
+   sendHttpRequestAndWait()
    timeHelpers
 
+
+
+ideas for future development:
+---------------------------------------------------------------------
 * make state file same as the Tcl version.
 * add an HTTP response class and revise send and wait function
 * move send and wait out to library.
 
-- make it a proper daemon
-- write to syslog
+* make it a proper daemon
+* write to syslog
 
-- create a separate GUI tool to create and manip the Config file
+* create a separate GUI tool to create and manip the Config file
 
