@@ -9,18 +9,16 @@ CFLAGS += -Wall -O2 -std=gnu99
 
 EXE = updateDynDNS 
 ALL_SRCS = $(wildcard *.c) $(wildcard ../../lib/*.c)
-EXCLUDE_SRCS=getURL.c
+EXCLUDE_SRCS =
 SRCS = $(filter-out $(EXCLUDE_SRCS), $(ALL_SRCS))
 OBJS = $(SRCS:%.c=%.o)
-
-CFLAGS += -DDO_NOT_USE_CURL_LIBRARY
 
 all : $(EXE)
 
 $(EXE) : $(OBJS)
-	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIB_FLAGS)
+	$(CC) $(LDFLAGS) -o $@ $(OBJS)
 
-%.o : %.cpp
+%.o : %.c
 	$(CC) -c $(CFLAGS) $<
 
 clean:
