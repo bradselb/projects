@@ -23,7 +23,6 @@
 * make state file same as the Tcl version.
 * add an HTTP response class and revise send and wait function
 * move send and wait out to library.
-- move config and state files to proper locations
 
 - make it a proper daemon
 - write to syslog
