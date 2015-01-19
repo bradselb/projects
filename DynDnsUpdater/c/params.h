@@ -16,9 +16,13 @@ struct params
 
 extern const struct params* const params;
 
+// returns index into argv of the first non-option cmdline arg.
 int get_cmdline_options(int argc, char** argv);
-int print_help(void);
-int print_options(void);
 
+// returns zero
+int print_help(void);
+
+// returns zero
+int print_options(void);
 
 #endif // !defined DYNDNSUPDATER_PARAMS_H

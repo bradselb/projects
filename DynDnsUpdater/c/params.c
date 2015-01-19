@@ -56,6 +56,7 @@ int get_cmdline_options(int argc, char** argv)
 
             case '?':
                 fprintf(stderr, "ignoring unknown cmdline option, '%c'\n", optopt);
+                g_params.help = 1;
                 break;
 
             default:
@@ -71,7 +72,12 @@ int get_cmdline_options(int argc, char** argv)
 int print_help(void)
 {
     int rc = 0;
-    printf("help\n");
+
+    printf("\nBrad's Embedded DynDNS updater Client\n");
+    printf("-h --help        print this help and exit.\n");
+    printf("   --version     print version string and exit.\n");
+    printf("-c --config-file <file-path> specify the path to the config file.\n\n");
+
     return rc;
 }
 
