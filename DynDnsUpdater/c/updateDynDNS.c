@@ -4,16 +4,17 @@
 #include "extractIpAddress.h"
 #include "findReply.h"
 #include "timeHelpers.h"
+#include "params.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 // update this with major revisions. 
-#define  VERSION  "v0.91 (18-Jan-2015)"
+#define  VERSION  "v0.92 (19-Jan-2015)"
 
 // req'd format is: "Company-model-version"
-static const char* USER_AGENT = "Self-Brad's embedded DynDNS Updater-"VERSION;
+static const char* USER_AGENT = "BradSelb-Embedded DynDNS Updater-" VERSION;
 static const char* DEFAULT_CONFIG_FILE_PATH = "/var/tmp/DynDnsUpdaterConfig.dat";
 
 
@@ -26,6 +27,7 @@ static char* createResourceQueryString(const struct Config* config, const char* 
 int main(int argc, char* argv[])
 {
    int rc;
+   const char* config_file_path;
    struct Config* config = 0;
    struct State* state = 0;
    char currentIp[32];
@@ -39,7 +41,28 @@ int main(int argc, char* argv[])
    memset(response, 0, sizeof response);
    memset(currentIp, 0, sizeof currentIp);
 
-   config = loadConfig(DEFAULT_CONFIG_FILE_PATH);
+
+   get_cmdline_options(argc, argv);
+
+   if (params->help) {
+      print_help();
+      goto exit;
+   }
+
+   if (params->version) {
+      printf("%s\n", USER_AGENT);
+      goto exit;
+   }
+
+   if (params->cfgfile) {
+      config_file_path = params->cfgfile;
+   } else {
+      config_file_path = DEFAULT_CONFIG_FILE_PATH;
+   }
+
+
+
+   config = loadConfig(config_file_path);
    if (!config) {
       fprintf(stderr, "Config File does not exist\n");
       fprintf(stderr, "creating a default config, '%s'\n", DEFAULT_CONFIG_FILE_PATH);
@@ -108,6 +131,9 @@ int main(int argc, char* argv[])
       }
       saveState(state, getStateFilename(config));
    }
+
+
+exit:
 
    if (resource) {
       free(resource);
