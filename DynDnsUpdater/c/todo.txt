@@ -1,10 +1,5 @@
-- accept command line args
-  * version 
-  * help
-  * config file path
-  * log file 
-  * pid file
-
+To Do:
+---------------------------------------------------------------------
 - unit tests
    Config
    State
@@ -12,6 +7,7 @@
    findReply()
    sendHttpRequestAndWait()
    timeHelpers
+   params
 
 
 
@@ -20,9 +16,7 @@ ideas for future development:
 * make state file same as the Tcl version.
 * add an HTTP response class and revise send and wait function
 * move send and wait out to library.
-
 * make it a proper daemon
 * write to syslog
-
 * create a separate GUI tool to create and manip the Config file
 

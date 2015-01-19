@@ -13,16 +13,21 @@ of the WAN side of the router, is pretty inconvenient. With DSL, it
 seems to change everytime you reboot the DSL modem.
 
 It turns out that there are many web services that address this issue. 
-I chose DynDNS because at the time, there was a free option and prehaps 
+I chose DynDNS because at the time there was a free option and prehaps 
 more importantly, they had documentation exlaining the protocol.  Many home
 routers have a feature that makes working with DynDNS really easy.
-The 2Wire 2701HG-B combination modem / Wi-Fi residential gateway that we
-purchased from our DSL service provider did not. So began my quest to 
-write my own dynamic dns updater. The scripts and programs in the sub-directories
-here are the results of that effort. I did the TCL implementation was a proof
-of concept and is pretty bare bones.  I started work on a more thorough
-implementation in C++ next and then when I wanted to run the updater on an
-embedded Linux development board, I re-wrote the whole thing in C.
+The 2Wire 2701HG-B residential gateway that we purchased from our DSL service
+provider did not. So began my quest to write my own dynamic dns updater. 
+The scripts and programs in the sub-directories are the results of that effort.
+I did the TCL implementation first as a proof of concept. It is pretty bare
+bones but works perfectly. We dogfooded this for about a year.  During that 
+time, I started work on a more thorough implementation in C++ but I re-wrote
+the whole thing in C when I realized that the embedded system where I wanted
+to run the updater client was too resource limited to allow the luxury of C++.
+
+Update - as of mid January 2015, the C implementation is more-or-less complete.
+Liberated from the curl library, this version depends only upon the GNU C library.
+We've been dog-fooding it here at home since January 2015. 
 
 
 
