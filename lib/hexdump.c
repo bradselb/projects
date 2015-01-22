@@ -3,8 +3,9 @@
 #include <ctype.h>
 
 // --------------------------------------------------------------------------
-int hexdump(const char* buf, int size)
+int hexdump(const void* p, int size)
 {
+    unsigned char* buf = (unsigned char*)p;
 	int k = 0;
 	for (int i=0; i<size; ++i) {
 		if (0 == i%16) {
