@@ -184,6 +184,16 @@ int http_to_string(struct HttpRequest* request, char* buf, unsigned int bufsize)
             }
         }
 
+        {
+            size = bufsize - (length + 1);
+            count = snprintf(buf+length, size, "Connection: close\r\n");
+            if (0 < count && count < size) {
+                length += count;
+            } else {
+                goto exit;
+            }
+        }
+
         size = bufsize - (length + 1);
         count = snprintf(buf+length, size, "\r\n");
         if (0 < count && count < size) {
