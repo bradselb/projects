@@ -3,6 +3,7 @@
 #include <string.h>
 
 int parse_date_time(const char* s, int* first, int* mid, int* last);
+int parse_lat_lon(const char* s, float* degrees);
 
 int main(int argc, char* argv[])
 {
@@ -14,7 +15,7 @@ int main(int argc, char* argv[])
     char* token;
     char* key;
     int token_index;
-    char* tokens[16];
+    char* tokens[32];
 
     buf = malloc(bufsize);
     if (!buf) {
@@ -28,6 +29,7 @@ int main(int argc, char* argv[])
         }
 
         while (fgets(buf, bufsize, file)) {
+            if (strlen(buf) < 10) continue;
             token_index = 0;
             memset(tokens, 0, sizeof tokens);
             token = strtok(buf, delims);
@@ -36,11 +38,24 @@ int main(int argc, char* argv[])
                 ++token_index;
                 token = strtok(0, delims);
             }
+
             key = tokens[0];
             if (0 == strncmp(key, "GPRMC", 5) && 'A' == tokens[2][0]) {
+                int day, month, year, hour, minute, second;
+                float lat, lon;
 
-                fprintf(stdout, "Date:%s, Time:%s, lat: %s%s, lon: %s%s, Heading: %s, speed: %s\n",
-                        tokens[9], tokens[1], tokens[3],tokens[4], tokens[5], tokens[6], tokens[8], tokens[7]);
+                parse_date_time(tokens[1], &hour, &minute, &second);
+                parse_date_time(tokens[9], &day, &month, &year);
+                year += 2000;
+
+                parse_lat_lon(tokens[3], &lat);
+                parse_lat_lon(tokens[5], &lon);
+/*
+                fprintf(stdout, "%02d-%02d-%d %02d:%02d:%02d %f %s, %f %s  (speed: %s, heading: %s)\n",
+                        day, month, year, hour, minute, second, lat, tokens[4], lon, tokens[6], tokens[7], tokens[8]);
+*/
+                fprintf(stdout, "%02d-%02d-%d, %02d:%02d:%02d, %f%s, %f%s\n",
+                        day, month, year, hour, minute, second, lat, tokens[4], lon, tokens[6]);
             }
         
         }
@@ -56,7 +71,6 @@ exit:
 }
 
 
-/* strategy */
 int parse_date_time(const char* s, int* first, int* mid, int* last)
 {
     int rc;
@@ -65,8 +79,11 @@ int parse_date_time(const char* s, int* first, int* mid, int* last)
     int val;
     char* p;
 
+    if (!s) {
+        rc = -1;
+        goto exit;
+    }
 
-    rc = 0;
     memset(buf, 0, sizeof buf);
     strncpy(buf, s, buflen);
 
@@ -87,7 +104,49 @@ int parse_date_time(const char* s, int* first, int* mid, int* last)
     val = atoi(p);
     if (first) *first = val;
 
+    rc = 0;
+
+exit:
     return rc;
 }
 
+
+int parse_lat_lon(const char* s, float* degrees)
+{
+    int rc;
+    char buf[32];
+    int buflen = sizeof buf / sizeof buf[0];
+    char* p;
+    int dp_index;
+    float val;
+
+    rc = -1;
+    if (!s) {
+        goto exit;
+    }
+
+    memset(buf, 0, sizeof buf);
+    strncpy(buf, s, buflen);
+
+    /* find the decimal point */
+    dp_index = strcspn(buf, ".");
+    if (dp_index < 2) {
+        goto exit;
+    }
+
+    /* point to the minutes part */
+    p = buf + (dp_index - 2);
+    val = atof(p);
+    *p = 0;
+    /* convert minutes to decimal degrees and add full degrees */
+    val = (val/60.0) + atof(buf);
+
+    if (degrees) *degrees = val;
+
+
+    rc = 0;
+
+exit:
+    return rc;
+}
 
