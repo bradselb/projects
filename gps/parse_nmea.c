@@ -74,7 +74,7 @@ exit:
 int parse_date_time(const char* s, int* first, int* mid, int* last)
 {
     int rc;
-    char buf[32];
+    char buf[8];
     int buflen = sizeof buf / sizeof buf[0];
     int val;
     char* p;
@@ -84,8 +84,8 @@ int parse_date_time(const char* s, int* first, int* mid, int* last)
         goto exit;
     }
 
-    memset(buf, 0, sizeof buf);
-    strncpy(buf, s, buflen);
+    buf[buflen-1] = 0;
+    strncpy(buf, s, buflen-1);
 
     /* extract year or seconds from last position*/
     p = buf + 4;
@@ -114,7 +114,7 @@ exit:
 int parse_lat_lon(const char* s, float* degrees)
 {
     int rc;
-    char buf[32];
+    char buf[16];
     int buflen = sizeof buf / sizeof buf[0];
     char* p;
     int dp_index;
@@ -125,8 +125,8 @@ int parse_lat_lon(const char* s, float* degrees)
         goto exit;
     }
 
-    memset(buf, 0, sizeof buf);
-    strncpy(buf, s, buflen);
+    buf[buflen-1] = 0;
+    strncpy(buf, s, buflen-1);
 
     /* find the decimal point */
     dp_index = strcspn(buf, ".");
