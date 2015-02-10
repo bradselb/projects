@@ -7,9 +7,10 @@ $ gcc -o parse_nmea -D_BSD_SOURCE -Wall -O2 -std=c89 parse_nmea.c
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h> /* toupper() */
 
 int parse_date_time(const char* s, int* first, int* mid, int* last);
-int parse_lat_lon(const char* s, float* degrees);
+int parse_lat_lon(const char* s, const char* nsew, float* degrees);
 
 int main(int argc, char* argv[])
 {
@@ -57,13 +58,13 @@ int main(int argc, char* argv[])
                 parse_date_time(tokens[9], &day, &month, &year);
                 year += 2000;
 
-                parse_lat_lon(tokens[3], &lat);
-                parse_lat_lon(tokens[5], &lon);
+                parse_lat_lon(tokens[3], tokens[4], &lat);
+                parse_lat_lon(tokens[5], tokens[6], &lon);
 
                 speed = 1.852 * atof(tokens[7]); /* convert knots to Km/Hr */
                 course = atof(tokens[8]);
-                fprintf(stdout, "%02d-%02d-%d %02d:%02d:%02d    %f %s, %f %s    %6.1f (Km/Hr), %6.1f (degrees)\n",
-                        day, month, year, hour, minute, second, lat, tokens[4], lon, tokens[6], speed, course);
+                fprintf(stdout, "%02d-%02d-%d  %02d:%02d:%02d    %f , %f    %6.1f (Km/Hr), %6.1f (degrees)\n",
+                        day, month, year, hour, minute, second, lat, lon, speed, course);
 /*
                 fprintf(stdout, "%02d-%02d-%d, %02d:%02d:%02d, %f%s, %f%s\n",
                         day, month, year, hour, minute, second, lat, tokens[4], lon, tokens[6]);
@@ -122,8 +123,9 @@ exit:
     return rc;
 }
 
-
-int parse_lat_lon(const char* s, float* degrees)
+/* s is the ddmm.mmmmmm string, */
+/* nsew is one of "N", "S", "E", "W" */
+int parse_lat_lon(const char* s, const char* nsew, float* degrees)
 {
     int rc;
     char buf[16];
@@ -133,7 +135,7 @@ int parse_lat_lon(const char* s, float* degrees)
     float val;
 
     rc = -1;
-    if (!s) {
+    if (!s || !nsew) {
         goto exit;
     }
 
@@ -152,6 +154,11 @@ int parse_lat_lon(const char* s, float* degrees)
     *p = 0;
     /* convert minutes to decimal degrees and add full degrees */
     val = (val/60.0) + atof(buf);
+
+    /* North and East are positive. South and West are negative */
+    if ('S' == toupper(*nsew) || 'W' == toupper(*nsew)) {
+        val = -1.0 * val;
+    }
 
     if (degrees) *degrees = val;
 
