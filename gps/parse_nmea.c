@@ -50,6 +50,7 @@ int main(int argc, char* argv[])
             }
 
             key = tokens[0];
+
             if (0 == strncmp(key, "$GPRMC", 6) && tokens[2] && 'A' == *tokens[2]) {
                 int day, month, year, hour, minute, second;
                 float lat, lon, speed, course;
@@ -63,14 +64,52 @@ int main(int argc, char* argv[])
 
                 speed = 1.852 * atof(tokens[7]); /* convert knots to Km/Hr */
                 course = atof(tokens[8]);
-                fprintf(stdout, "%02d-%02d-%d  %02d:%02d:%02d    %f , %f    %6.1f (Km/Hr), %6.1f (degrees)\n",
+
+                fprintf(stdout, "GPRMC  %02d-%02d-%d  %02d:%02d:%02d   %f , %f  %.1f (Km/Hr), %.1f (degrees)\n",
                         day, month, year, hour, minute, second, lat, lon, speed, course);
 /*
-                fprintf(stdout, "%02d-%02d-%d, %02d:%02d:%02d, %f%s, %f%s\n",
+                fprintf(stdout, "GPRMC  %02d-%02d-%d, %02d:%02d:%02d, %f%s, %f%s\n",
                         day, month, year, hour, minute, second, lat, tokens[4], lon, tokens[6]);
 */
+            } else 
+            if (0 == strncmp(key, "$GPGGA", 6) && tokens[6] && '0' != *tokens[6] && ' ' != *tokens[6]) {
+                int hour, minute, second;
+                int fix_quality, satellites;
+                float lat, lon, hdop, altitude, geoid_height;
+                
+                parse_date_time(tokens[1], &hour, &minute, &second);
+                parse_lat_lon(tokens[2], tokens[3], &lat);
+                parse_lat_lon(tokens[4], tokens[5], &lon);
+
+                fix_quality = atoi(tokens[6]);
+                satellites = atoi(tokens[7]);
+                hdop = atof(tokens[8]);
+                altitude = atof(tokens[9]);
+                /* tokens[10] is units of altitude, always? M for meters? */
+                geoid_height = atof(tokens[11]);
+                /* tokens[12] is units of height, always? M for meters? */
+
+                fprintf(stdout, "GPGGA              %02d:%02d:%02d   %f , %f   %d, %2d, %.1f, %.1f%s, %.1f%s \n",
+                        hour, minute, second, lat, lon, fix_quality, satellites, hdop, altitude,tokens[10], geoid_height, tokens[12]);
+            } else 
+            if (0 == strncmp(key+3, "GNS",3) && tokens[6] && 'N' != *tokens[6] && ' ' != *tokens[6]) {
+                int hour, minute, second;
+                char* fix_quality;
+                int satellites;
+                float lat, lon, hdop, altitude, geoid_height;
+                
+                parse_date_time(tokens[1], &hour, &minute, &second);
+                parse_lat_lon(tokens[2], tokens[3], &lat);
+                parse_lat_lon(tokens[4], tokens[5], &lon);
+                fix_quality = tokens[6];
+                satellites = atoi(tokens[7]);
+                hdop = atof(tokens[8]);
+                altitude = atof(tokens[9]);
+                geoid_height = atof(tokens[10]);
+
+                fprintf(stdout, "%s              %02d:%02d:%02d   %f , %f  %s, %2d, %.1f, %.1f , %.1f\n",
+                        (key+1), hour, minute, second, lat, lon, fix_quality, satellites, hdop, altitude, geoid_height);
             }
-        
         }
 
         fclose(file);
@@ -83,7 +122,8 @@ exit:
     return 0;
 }
 
-
+/* s is either time in the form hhmmss.s   */
+/* or, the date in the form DDMMYY . Century is assumed to be 2000   */
 int parse_date_time(const char* s, int* first, int* mid, int* last)
 {
     int rc;
@@ -92,7 +132,7 @@ int parse_date_time(const char* s, int* first, int* mid, int* last)
     int val;
     char* p;
 
-    if (!s) {
+    if (!s || strlen(s) < 6) {
         rc = -1;
         goto exit;
     }
@@ -135,7 +175,7 @@ int parse_lat_lon(const char* s, const char* nsew, float* degrees)
     float val;
 
     rc = -1;
-    if (!s || !nsew) {
+    if (!s || !nsew || strlen(s) < 6) {
         goto exit;
     }
 
