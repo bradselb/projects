@@ -1,3 +1,9 @@
+/* compile with the following command line...
+
+$ gcc -o parse_nmea -D_BSD_SOURCE -Wall -O2 -std=c89 parse_nmea.c
+
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,7 +17,7 @@ int main(int argc, char* argv[])
     int arg_index;
     char* buf = 0;
     const unsigned int bufsize = 256;
-    const char* delims = ",$*\r\n";
+    const char* delims = ",";
     char* token;
     char* key;
     int token_index;
@@ -32,17 +38,20 @@ int main(int argc, char* argv[])
             if (strlen(buf) < 10) continue;
             token_index = 0;
             memset(tokens, 0, sizeof tokens);
-            token = strtok(buf, delims);
-            while (token) {
+            char* empty = " ";
+            char* p = &buf[0];
+            while (0 != (token = strsep(&p, delims))) {
+                if (0 == *token) {
+                    token = empty;
+                }
                 tokens[token_index] = token;
                 ++token_index;
-                token = strtok(0, delims);
             }
 
             key = tokens[0];
-            if (0 == strncmp(key, "GPRMC", 5) && 'A' == tokens[2][0]) {
+            if (0 == strncmp(key, "$GPRMC", 6) && tokens[2] && 'A' == *tokens[2]) {
                 int day, month, year, hour, minute, second;
-                float lat, lon;
+                float lat, lon, speed, course;
 
                 parse_date_time(tokens[1], &hour, &minute, &second);
                 parse_date_time(tokens[9], &day, &month, &year);
@@ -50,12 +59,15 @@ int main(int argc, char* argv[])
 
                 parse_lat_lon(tokens[3], &lat);
                 parse_lat_lon(tokens[5], &lon);
+
+                speed = 1.852 * atof(tokens[7]); /* convert knots to Km/Hr */
+                course = atof(tokens[8]);
+                fprintf(stdout, "%02d-%02d-%d %02d:%02d:%02d    %f %s, %f %s    %6.1f (Km/Hr), %6.1f (degrees)\n",
+                        day, month, year, hour, minute, second, lat, tokens[4], lon, tokens[6], speed, course);
 /*
-                fprintf(stdout, "%02d-%02d-%d %02d:%02d:%02d %f %s, %f %s  (speed: %s, heading: %s)\n",
-                        day, month, year, hour, minute, second, lat, tokens[4], lon, tokens[6], tokens[7], tokens[8]);
-*/
                 fprintf(stdout, "%02d-%02d-%d, %02d:%02d:%02d, %f%s, %f%s\n",
                         day, month, year, hour, minute, second, lat, tokens[4], lon, tokens[6]);
+*/
             }
         
         }
