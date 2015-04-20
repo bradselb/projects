@@ -11,7 +11,7 @@
 #include <string.h>
 
 // update this with major revisions. 
-#define  VERSION  "v0.92 (19-Jan-2015)"
+#define  VERSION  "v0.95 (20-Apr-2015)"
 
 // req'd format is: "Company-model-version"
 static const char* USER_AGENT = "BradSelb-Embedded DynDNS Updater-" VERSION;
