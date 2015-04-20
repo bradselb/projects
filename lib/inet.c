@@ -51,7 +51,7 @@ int inet_connect(const char* name, const char* port, int type)
 {
     int sock;
     struct addrinfo hints;
-    struct addrinfo* addrinfo;
+    struct addrinfo* ai;
     int rc;
  
     sock = -1; // fail by default.
@@ -67,19 +67,18 @@ int inet_connect(const char* name, const char* port, int type)
 
     if (!name || !port) {
         fprintf(stderr, "(%s:%d) %s(), invalid args.\n", __FILE__, __LINE__, __FUNCTION__);
-        sock = -1;
         goto out;
     }
 
-    rc = getaddrinfo(name, port, &hints, &addrinfo);
+    ai = 0;
+    rc = getaddrinfo(name, port, &hints, &ai);
     if (rc != 0) {
         fprintf(stderr, "(%s:%d) %s(), getaddrinfo() returned: %d,  %s\n", __FILE__, __LINE__, __FUNCTION__, rc, gai_strerror(rc));
         goto out;
     }
 
     struct addrinfo* iter;
-    for (iter=addrinfo; iter!=NULL; ++iter) {
-
+    for (iter=ai; iter!=NULL; iter=iter->ai_next) {
         sock = socket(iter->ai_family, iter->ai_socktype, iter->ai_protocol);
         if (sock < 0) continue;
 
@@ -94,8 +93,7 @@ int inet_connect(const char* name, const char* port, int type)
             break;
         }
     }
-
-    freeaddrinfo(addrinfo);
+    freeaddrinfo(ai);
 
 out:
     return sock;
@@ -233,7 +231,7 @@ int inet_bind(const char* name, const char* port)
 {
     int sock;
     struct addrinfo hints;
-    struct addrinfo* addrinfo;
+    struct addrinfo* ai;
     int rc;
  
     sock = -1; // fail by default.
@@ -255,15 +253,15 @@ int inet_bind(const char* name, const char* port)
     }
 
 
-    rc = getaddrinfo(name, port, &hints, &addrinfo);
+    ai = 0;
+    rc = getaddrinfo(name, port, &hints, &ai);
     if (rc != 0) {
         fprintf(stderr, "(%s:%d) %s(), getaddrinfo() returned: %d,  %s\n", __FILE__, __LINE__, __FUNCTION__, rc, gai_strerror(rc));
         goto out;
     }
 
     struct addrinfo* iter;
-    for (iter=addrinfo; iter!=NULL; ++iter) {
-
+    for (iter=ai; iter!=NULL; iter=iter->ai_next) {
         sock = socket(iter->ai_family, iter->ai_socktype, iter->ai_protocol);
         if (sock < 0) continue;
 
@@ -292,7 +290,7 @@ int inet_bind(const char* name, const char* port)
         }
     }
 
-    freeaddrinfo(addrinfo);
+    freeaddrinfo(ai);
 
 out:
      return sock;
