@@ -12,7 +12,7 @@
 #endif
 
 // format is: 28-Feb-2011_18:34:09
-static const char* g_TimeFormat = "%d-%b-%Y_%T%Z";
+static const char* g_TimeFormat = "%d-%b-%Y %T %Z";
 static const int g_SecondsPerDay = 24 * 60 * 60; // (hr/day) * (min/hr) * (sec/min)
 
 
