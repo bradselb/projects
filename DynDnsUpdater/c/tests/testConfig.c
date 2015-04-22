@@ -1,3 +1,6 @@
+// this works.
+//gcc -Wall -O2 -std=gnu99 -o testConfig -I../ -I../../../lib/ -L../../../lib/ testConfig.c ../Config.c  -lbrad
+
 #include "Config.h"
 
 #include <stdlib.h>
@@ -8,9 +11,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-
-// this works.
-//gcc -Wall -O2 -std=gnu99 -o testConfig -I../ -I../../../lib/ -L../../../lib/ testConfig.c ../Config.c  -lbrad
 
 
 static const char* CONFIG_FILE_PATH = "./DynDnsUpdater.conf";
