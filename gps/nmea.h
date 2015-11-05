@@ -1,6 +1,7 @@
 #ifndef NMEA_H
 #define NMEA_H
 
+#include <time.h> // time_t
 
 /* */
 struct GGA
@@ -47,12 +48,7 @@ struct GSA
 /* recommended minimum coordinates  */
 struct RMC
 {
-    int hour;
-    int min;
-    int sec;
-    int day;
-    int month;
-    int year;
+    time_t time;
     char status; /* A: active, V: void */
     float lat;
     float lon;

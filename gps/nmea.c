@@ -1,11 +1,12 @@
-#include "nmea.h"
-
 #define _BSD_SOURCE 1
+
+#include "nmea.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h> /* toupper() */
+#include <time.h>
 
 /* ---------------------------------------------------------------------- */
 /* some helpful web sites: */
@@ -106,12 +107,19 @@ struct GSV* parse_gsv(char* sentence)
 }
 
 
+
+
+
+
+
 /* ---------------------------------------------------------------------- */
 struct RMC* parse_rmc(const char* tokens[], int token_count)
 {
     struct RMC* rmc = 0;
     int hour, minute, second;
     int day, month, year;
+    time_t t0;
+    struct tm tm0;
     float lat, lon, speed, heading;
     char status; // A: active, V: void
     const char* s = tokens[0];
@@ -126,19 +134,22 @@ struct RMC* parse_rmc(const char* tokens[], int token_count)
         parse_date_time(tokens[9], &day, &month, &year);
         year += 2000;
 
+        tm0.tm_year = year - 1900;
+        tm0.tm_mon = month - 1;
+        tm0.tm_mday = day;
+        tm0.tm_hour = hour;
+        tm0.tm_min = minute;
+        tm0.tm_sec = second;
+        t0 = mktime(&tm0);
+
         fprintf(stdout, "RMC %02d:%02d:%02d %.6f , %.6f  %.1f(knots), %.1f(degrees) %02d-%02d-%d\n",
                 hour, minute, second, lat, lon, speed, heading, day, month, year);
-
+        fprintf(stdout, "%s", ctime(&t0));
 
 
         if (0 != (rmc = malloc(sizeof(struct RMC)))) {
             memset(rmc, 0, sizeof(struct RMC));
-            rmc->hour = hour;
-            rmc->min = minute;
-            rmc->sec = second;
-            rmc->day = day;
-            rmc->month = month;
-            rmc->year = year;
+            rmc->time = t0;
             rmc->status = status;
             rmc->lat = lat;
             rmc->lon = lon;
