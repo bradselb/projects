@@ -1,8 +1,6 @@
 #ifndef NMEA_H
 #define NMEA_H
 
-#include <time.h> // time_t
-
 /* */
 struct GGA
 {
@@ -26,8 +24,8 @@ struct GNS
     int sec;
     float lat;
     float lon;
-    char mode[8];
-    int num_sats_in_view;
+    char mode[4];
+    int sat_count; /* Trimble says nr of satellites used */ 
     float hdop;
     float altitude; /* meters */
     float geoid_height; /* meters above mean sea level */
@@ -48,7 +46,12 @@ struct GSA
 /* recommended minimum coordinates  */
 struct RMC
 {
-    time_t time;
+    int hour;
+    int min;
+    int sec;
+    int day;
+    int month;
+    int year;
     char status; /* A: active, V: void */
     float lat;
     float lon;
@@ -59,6 +62,8 @@ struct RMC
 int tokenize(char* s, const char* tokens[], int len);
 
 struct GGA* parse_gga(const char* tokens[], int token_count);
+struct GNS* parse_gns(const char* tokens[], int token_count);
+struct GSA* parse_gsa(const char* tokens[], int token_count);
 struct RMC* parse_rmc(const char* tokens[], int token_count);
 
 #endif
